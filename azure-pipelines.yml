@@ -129,7 +129,6 @@ jobs:
   condition: succeeded()
   variables:
     SURGE_VERSION: $[ dependencies.Build.outputs['mac.surge.SURGE_VERSION'] ]
-    GITHUB_TOKEN: $(github-access-token)
 
   steps:
   - checkout: self
@@ -138,6 +137,10 @@ jobs:
   - task: DownloadSecureFile@1
     inputs:
       secureFile: surge.id_rsa
+
+  - task: DownloadSecureFile@1
+    inputs:
+      secureFile: surge-build-bot.sh
 
   - task: DownloadPipelineArtifact@0
     inputs:
@@ -191,6 +194,7 @@ jobs:
       export GIT_SSH_COMMAND="ssh -oStrictHostKeyChecking=no -i $AGENT_TEMPDIRECTORY/surge.id_rsa"
 
       # perform GH release
+      . $AGENT_TEMPDIRECTORY/surge-build-bot.sh
       curl -L https://github.com/tcnksm/ghr/releases/download/v0.12.0/ghr_v0.12.0_linux_amd64.tar.gz --output ghr.tar.gz
       tar zxvf ghr.tar.gz
       ls -l
