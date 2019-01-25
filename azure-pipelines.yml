@@ -1,3 +1,4 @@
+# Surge synth build script
 # https://aka.ms/yaml
 
 trigger:
@@ -5,136 +6,241 @@ trigger:
 
 jobs:
 - job: Build
-strategy:
-matrix:
-mac:
-imageName: 'macos-10.13'
-isMac: true
-windows:
-imageName: 'vs2017-win2016'
-isWindows: true
+  strategy:
+    matrix:
+      mac:
+        imageName: 'macos-10.13'
+        isMac: true
+      windows:
+        imageName: 'vs2017-win2016'
+        isWindows: true
+      linux:
+        imageName: 'ubuntu-16.04'
+        isLinux: true
 
-pool:
-vmImage: $(imageName)
+  pool:
+    vmImage: $(imageName)
 
-steps:
-- checkout: self
-fetchDepth: 1
+  steps:
+  - checkout: none
 
-- task: DownloadSecureFile@1
-inputs:
-secureFile: get-vst2.sh
+  - task: DownloadSecureFile@1
+    inputs:
+      secureFile: get-vst2.sh
 
-- bash: |
-ls -alFh $AGENT_TEMPDIRECTORY
-. $AGENT_TEMPDIRECTORY/get-vst2.sh
-echo "VST2SDK_DIR=$VST2SDK_DIR"
-displayName: Get VST 2 SDK
+  - bash: |
+      ls -alFh $AGENT_TEMPDIRECTORY
+      . $AGENT_TEMPDIRECTORY/get-vst2.sh
+      echo "VST2SDK_DIR=$VST2SDK_DIR"
+    displayName: Get VST 2 SDK
 
-- bash: |
-# do this here, because we're using a shallow clone and it fails using `submodules: recursive` above
-pushd $AGENT_TEMPDIRECTORY
-git clone git@github.com:kurasu/surge.git --depth
-git submodule update --init --recursive
+  - bash: |
+      # get the surge code
+      git clone --depth 1 https://github.com/surge-synthesizer/surge.git $AGENT_TEMPDIRECTORY/surge
+      mv $AGENT_TEMPDIRECTORY/surge/.git .
+      git reset --hard HEAD
+      git submodule update --init --recursive
 
-export SURGE_VERSION=$(cat VERSION)
-echo "SURGE_VERSION=$SURGE_VERSION"
-echo "##vso[task.setvariable variable=SURGE_VERSION]$SURGE_VERSION"
-displayName: Submodule init
+      export SURGE_VERSION=$(cat VERSION)
+      echo "SURGE_VERSION=$SURGE_VERSION"
+      echo "##vso[task.setvariable variable=SURGE_VERSION]$SURGE_VERSION"
+      echo "##vso[task.setvariable variable=SURGE_VERSION;isOutput=true]$SURGE_VERSION"
+    name: surge
+    displayName: Submodule init
 
-- bash: |
-pushd $AGENT_TEMPDIRECTORY
-export PREMAKE_MAC=https://github.com/premake/premake-core/releases/download/v5.0.0-alpha13/premake-5.0.0-alpha13-macosx.tar.gz
-curl -L $PREMAKE_MAC --output premake5.tar.gz
-tar zxvf premake5.tar.gz
-popd
+  - bash: |
+      pushd $AGENT_TEMPDIRECTORY
+      export PREMAKE_MAC=https://github.com/premake/premake-core/releases/download/v5.0.0-alpha13/premake-5.0.0-alpha13-macosx.tar.gz
+      curl -L $PREMAKE_MAC --output premake5.tar.gz
+      tar zxvf premake5.tar.gz
+      popd
 
-export PATH=$AGENT_TEMPDIRECTORY:$PATH
-./build-osx.sh --build --verbose
-ls -alFh target
-ls -alFh products
-condition: variables.isMac
-displayName: Build macOS releases
+      export PATH=$AGENT_TEMPDIRECTORY:$PATH
+      ./build-osx.sh --build --verbose
+      ls -alFh target
+      ls -alFh products
+    condition: variables.isMac
+    displayName: Build macOS releases
 
-- task: NuGetToolInstaller@0
-condition: variables.isWindows
-displayName: NuGet
+  - task: NuGetToolInstaller@0
+    condition: variables.isWindows
+    displayName: NuGet
 
-- bash: |
-pushd $AGENT_TEMPDIRECTORY
-export PREMAKE_WINDOWS=https://github.com/premake/premake-core/releases/download/v5.0.0-alpha13/premake-5.0.0-alpha13-windows.zip
-curl -L $PREMAKE_WINDOWS --output premake5.zip
-unzip premake5.zip
-popd
+  - bash: |
+      pushd $AGENT_TEMPDIRECTORY
+      export PREMAKE_WINDOWS=https://github.com/premake/premake-core/releases/download/v5.0.0-alpha13/premake-5.0.0-alpha13-windows.zip
+      curl -L $PREMAKE_WINDOWS --output premake5.zip
+      unzip premake5.zip
+      popd
 
-export PATH=$AGENT_TEMPDIRECTORY:$PATH
-premake5 vs2017
-ls -alFh
+      export PATH=$AGENT_TEMPDIRECTORY:$PATH
+      premake5 vs2017
+      ls -alFh
 
-# need this because MSBuild.restoreNugetPackages: true fails
-nuget restore .
-condition: variables.isWindows
-displayName: Setup Windows Project
+      # need this because MSBuild.restoreNugetPackages: true fails
+      nuget restore .
+    condition: variables.isWindows
+    displayName: Setup Windows Project
 
-- task: MSBuild@1
-inputs:
-solution: 'buildtask.xml'
-maximumCpuCount: true
-# restoreNugetPackages: true
-condition: variables.isWindows
-displayName: Build Windows
+  - task: MSBuild@1
+    inputs:
+      solution: 'buildtask.xml'
+      maximumCpuCount: true
+      # restoreNugetPackages: true
+    condition: variables.isWindows
+    displayName: Build Windows
 
-- bash: |
-nuget install chocolatey
-choco install innosetup version=5.6.1 -y
-iscc installer_win/surge.iss
-condition: variables.isWindows
-displayName: Make Windows installer
+  - bash: |
+      nuget install chocolatey
+      choco install innosetup version=5.6.1 -y
+      iscc installer_win/surge.iss
+    condition: variables.isWindows
+    displayName: Make Windows installer
 
-- task: PublishPipelineArtifact@0
-inputs:
-artifactName: 'INSTALLER_WIN_EXE'
-targetPath: 'installer_win/Output'
-condition: variables.isWindows
-displayName: Publish Windows installer
+  - task: PublishPipelineArtifact@0
+    inputs:
+      artifactName: 'INSTALLER_WIN_EXE'
+      targetPath: 'installer_win/Output'
+    condition: variables.isWindows
+    displayName: Publish Windows installer
 
-- bash: |
-echo "VST2SDK_DIR=$VST2SDK_DIR"
-echo "SURGE_VERSION=$SURGE_VERSION"
-pushd installer_mac
-./make_installer.sh
-./make_installer.sh "" --dmg
-popd
-condition: variables.isMac
-displayName: Make macOS installer
+  - bash: |
+      echo "VST2SDK_DIR=$VST2SDK_DIR"
+      echo "SURGE_VERSION=$SURGE_VERSION"
+      pushd installer_mac
+      ./make_installer.sh $SURGE_VERSION --dmg
+      rm *.pkg
+      popd
+    condition: variables.isMac
+    displayName: Make macOS installer
 
-- task: PublishPipelineArtifact@0
-inputs:
-artifactName: 'INSTALLER_MAC_DMG'
-targetPath: 'installer_mac/installer'
-condition: variables.isMac
-displayName: Publish macOS DMG
+  - task: PublishPipelineArtifact@0
+    inputs:
+      artifactName: 'INSTALLER_MAC_DMG'
+      targetPath: 'installer_mac/installer'
+    condition: variables.isMac
+    displayName: Publish macOS DMG
+
+  - bash: |
+      set -x
+
+      # 1. Install premake
+      pushd $AGENT_TEMPDIRECTORY
+      export PREMAKE_LINUX=https://github.com/premake/premake-core/releases/download/v5.0.0-alpha13/premake-5.0.0-alpha13-linux.tar.gz
+      curl -L $PREMAKE_LINUX --output premake5.tar.gz
+      tar zxvf premake5.tar.gz
+      export PATH=$AGENT_TEMPDIRECTORY:$PATH
+      popd
+
+      # 2. run apt-get install libgtkmm-3.0-dev
+      sudo apt-get install -y libgtkmm-3.0-dev
+
+      # 5. run `premake gmake2`
+      premake gmake2
+
+      # 6. run `./build-linux.sh --clean`
+      ./build-linux.sh --clean
+      ./build-linux.sh --build
+
+      find  . -name '*'
+    condition: variables.isLinux
+    displayName: Build Linux
 
 - job: Release
-dependsOn: Build
-condition: and(succeeded(), startsWith(variables['Build.SourceBranch'], 'refs/heads/releases/'))
-steps:
-- checkout: none
-fetchDepth: 1
+  dependsOn: Build
+  condition: succeeded()
+  variables:
+    SURGE_VERSION: $[ dependencies.Build.outputs['mac.surge.SURGE_VERSION'] ]
+    GITHUB_TOKEN: $(github-access-token)
 
-- task: DownloadPipelineArtifact@0
-inputs:
-artifactName: 'INSTALLER_MAC_DMG'
-targetPath: $(System.DefaultWorkingDirectory)
+  steps:
+  - checkout: self
+    # fetchDepth: 1
 
-- task: DownloadPipelineArtifact@0
-inputs:
-artifactName: 'INSTALLER_WIN_EXE'
-targetPath: $(System.DefaultWorkingDirectory)
+  - task: DownloadSecureFile@1
+    inputs:
+      secureFile: surge.id_rsa
 
-- bash: |
-ls -alFh
-find . -name '*'
+  - task: DownloadPipelineArtifact@0
+    inputs:
+      artifactName: 'INSTALLER_MAC_DMG'
+      targetPath: $(System.DefaultWorkingDirectory)
 
-echo "Release $BUILD_SOURCEBRANCH"
-displayName: Perform Release
+  - task: DownloadPipelineArtifact@0
+    inputs:
+      artifactName: 'INSTALLER_WIN_EXE'
+      targetPath: $(System.DefaultWorkingDirectory)
+
+  - bash: |
+      set -x
+
+      if [ "$(git log -1 --pretty=format:'%an')" == "build-bot" ]; then
+        exit 0
+      fi
+
+      ls -alFh
+      echo "SURGE_VERSION: $SURGE_VERSION"
+
+      rm -rf releases
+      mkdir -p releases
+      mv *.exe releases
+      mv *.dmg releases
+
+      export NOW="$(date +%Y-%m-%d)"
+
+      # copy macOS DMG installer
+      if [ -f "$(ls releases/*.dmg)" ]; then
+        export DMG="$(basename $(ls releases/*.dmg))"
+        export MACOS_LINK="[macOS 64-bit AU/VST/VST3](releases/download/$SURGE_VERSION/$DMG) - $NOW"
+      fi
+
+      # copy windows installer
+      if [ -f "$(ls releases/*.exe)" ]; then
+        export EXE="$(basename $(ls releases/*.exe))"
+        export WINDOWS_LINK="[Windows 64-bit VST/VST3](releases/download/$SURGE_VERSION/$EXE) - $NOW"
+      fi
+
+      # basic git config / setup
+      git config --global user.name "build-bot"
+      git config --global user.email "build-bot@localhost"
+
+      # setup git ssh command to use the key
+      ls $AGENT_TEMPDIRECTORY
+      chmod 400 $AGENT_TEMPDIRECTORY/surge.id_rsa
+      export GIT_SSH_COMMAND="ssh -oStrictHostKeyChecking=no -i $AGENT_TEMPDIRECTORY/surge.id_rsa"
+
+      # perform GH release
+      curl -L https://github.com/tcnksm/ghr/releases/download/v0.12.0/ghr_v0.12.0_linux_amd64.tar.gz --output ghr.tar.gz
+      tar zxvf ghr.tar.gz
+      ls -l
+      ./ghr -replace $SURGE_VERSION releases
+
+      echo << EOF > README.md
+      # Surge Synthesizer Releases
+      Synthesizer plug-in (previously released as Vember Audio Surge)
+      [![Build Status](https://dev.azure.com/surge-synthesizer/surge/_apis/build/status/surge-synthesizer.releases?branchName=master)](https://dev.azure.com/surge-synthesizer/surge/_build/latest?definitionId=1?branchName=master)
+      ## Download Surge Installers
+      * $MACOS_LINK
+      * $WINDOWS_LINK
+      EOF
+
+      # commit changes
+      git checkout master
+      git add README.md
+      # git add releases
+      git status
+      git commit -m "Release to $SURGE_VERSION"
+      git remote set-url origin git@github.com:surge-synthesizer/releases.git
+      git push
+      git status
+
+      # we could bump the version
+      export SURGE_VERSION_MAJ=$(echo $SURGE_VERSION | cut -f1 -d.)
+      export SURGE_VERSION_MIN=$(echo $SURGE_VERSION | cut -f2 -d.)
+      # echo $SURGE_VERSION_MAJ
+      ((SURGE_VERSION_MIN++))
+      # echo $SURGE_VERSION_MIN
+      export NEXT_SURGE_VERSION="$SURGE_VERSION_MAJ.$SURGE_VERSION_MIN"
+      echo "Next version?: $NEXT_SURGE_VERSION"
+      echo "$NEXT_SURGE_VERSION" > VERSION
+    displayName: Perform Release
