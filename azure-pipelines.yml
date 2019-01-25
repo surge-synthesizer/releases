@@ -2,7 +2,9 @@
 # https://aka.ms/yaml
 
 trigger:
-- master
+  branches:
+    exclude:
+    - master
 
 jobs:
 - job: Build
@@ -40,6 +42,9 @@ jobs:
       git reset --hard HEAD
       git submodule update --init --recursive
 
+      echo "BUILD_SOURCEBRANCH $BUILD_SOURCEBRANCH"
+      echo "BUILD_SOURCEBRANCHNAME $BUILD_SOURCEBRANCHNAME"
+      echo $BUILD_SOURCEBRANCHNAME > VERSION
       export SURGE_VERSION=$(cat VERSION)
       echo "SURGE_VERSION=$SURGE_VERSION"
       echo "##vso[task.setvariable variable=SURGE_VERSION]$SURGE_VERSION"
