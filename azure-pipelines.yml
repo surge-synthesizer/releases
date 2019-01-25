@@ -14,9 +14,6 @@ jobs:
       windows:
         imageName: 'vs2017-win2016'
         isWindows: true
-      linux:
-        imageName: 'ubuntu-16.04'
-        isLinux: true
 
   pool:
     vmImage: $(imageName)
@@ -120,31 +117,6 @@ jobs:
       targetPath: 'installer_mac/installer'
     condition: variables.isMac
     displayName: Publish macOS DMG
-
-  - bash: |
-      set -x
-
-      # 1. Install premake
-      pushd $AGENT_TEMPDIRECTORY
-      export PREMAKE_LINUX=https://github.com/premake/premake-core/releases/download/v5.0.0-alpha13/premake-5.0.0-alpha13-linux.tar.gz
-      curl -L $PREMAKE_LINUX --output premake5.tar.gz
-      tar zxvf premake5.tar.gz
-      export PATH=$AGENT_TEMPDIRECTORY:$PATH
-      popd
-
-      # 2. run apt-get install libgtkmm-3.0-dev
-      sudo apt-get install -y libgtkmm-3.0-dev
-
-      # 5. run `premake gmake2`
-      premake gmake2
-
-      # 6. run `./build-linux.sh --clean`
-      ./build-linux.sh --clean
-      ./build-linux.sh --build
-
-      find  . -name '*'
-    condition: variables.isLinux
-    displayName: Build Linux
 
 - job: Release
   dependsOn: Build
