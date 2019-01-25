@@ -192,7 +192,7 @@ jobs:
       curl -L https://github.com/tcnksm/ghr/releases/download/v0.12.0/ghr_v0.12.0_linux_amd64.tar.gz --output ghr.tar.gz
       tar zxvf ghr.tar.gz
       ls -l
-      ./ghr -replace $SURGE_VERSION releases
+      ghr_v0.12.0_linux_amd64/ghr -replace $SURGE_VERSION releases
 
       echo << EOF > README.md
       # Surge Synthesizer Releases
