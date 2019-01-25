@@ -112,7 +112,7 @@ jobs:
       echo "SURGE_VERSION=$SURGE_VERSION"
       pushd installer_mac
       ./make_installer.sh $SURGE_VERSION --dmg
-      rm *.pkg
+      rm -f *.pkg
       popd
     condition: variables.isMac
     displayName: Make macOS installer
