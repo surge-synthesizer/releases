@@ -26,12 +26,14 @@ jobs:
       secureFile: get-vst2.sh
 
   - bash: |
+      set -e
       ls -alFh $AGENT_TEMPDIRECTORY
       . $AGENT_TEMPDIRECTORY/get-vst2.sh
       echo "VST2SDK_DIR=$VST2SDK_DIR"
     displayName: Get VST 2 SDK
 
   - bash: |
+      set -e
       # get the surge code
       git clone --depth 1 https://github.com/surge-synthesizer/surge.git $AGENT_TEMPDIRECTORY/surge
       mv $AGENT_TEMPDIRECTORY/surge/.git .
@@ -46,6 +48,7 @@ jobs:
     displayName: Submodule init
 
   - bash: |
+      set -e
       pushd $AGENT_TEMPDIRECTORY
       export PREMAKE_MAC=https://github.com/premake/premake-core/releases/download/v5.0.0-alpha13/premake-5.0.0-alpha13-macosx.tar.gz
       curl -L $PREMAKE_MAC --output premake5.tar.gz
@@ -64,6 +67,7 @@ jobs:
     displayName: NuGet
 
   - bash: |
+      set -e
       pushd $AGENT_TEMPDIRECTORY
       export PREMAKE_WINDOWS=https://github.com/premake/premake-core/releases/download/v5.0.0-alpha13/premake-5.0.0-alpha13-windows.zip
       curl -L $PREMAKE_WINDOWS --output premake5.zip
@@ -88,6 +92,7 @@ jobs:
     displayName: Build Windows
 
   - bash: |
+      set -e
       nuget install chocolatey
       choco install innosetup version=5.6.1 -y
       iscc installer_win/surge.iss
@@ -102,6 +107,7 @@ jobs:
     displayName: Publish Windows installer
 
   - bash: |
+      set -e
       echo "VST2SDK_DIR=$VST2SDK_DIR"
       echo "SURGE_VERSION=$SURGE_VERSION"
       pushd installer_mac
@@ -144,6 +150,7 @@ jobs:
       targetPath: $(System.DefaultWorkingDirectory)
 
   - bash: |
+      set -e
       set -x
 
       if [ "$(git log -1 --pretty=format:'%an')" == "build-bot" ]; then
