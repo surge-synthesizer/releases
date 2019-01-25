@@ -161,8 +161,6 @@ jobs:
       set -e
       set -x
 
-      echo $GITHUB_TOKEN
-
       if [ "$(git log -1 --pretty=format:'%an')" == "build-bot" ]; then
         exit 0
       fi
@@ -202,8 +200,10 @@ jobs:
       . $AGENT_TEMPDIRECTORY/surge-build-bot.sh
       curl -L https://github.com/tcnksm/ghr/releases/download/v0.12.0/ghr_v0.12.0_linux_amd64.tar.gz --output ghr.tar.gz
       tar zxvf ghr.tar.gz
-      ls -l
-      ghr_v0.12.0_linux_amd64/ghr -replace $SURGE_VERSION releases
+      if [ "$SURGE_VERSION" == "master" ]; then
+        export DRAFT="-draft"
+      fi
+      ghr_v0.12.0_linux_amd64/ghr $DRAFT -replace $SURGE_VERSION releases
 
       cat << EOF > README.md
       # Surge Synthesizer Releases
@@ -221,19 +221,7 @@ jobs:
       git checkout master
       git add README.md
       # git add releases
-      git status
       git commit -m "Release to $SURGE_VERSION"
       git remote set-url origin git@github.com:surge-synthesizer/releases.git
       git push
-      git status
-
-      # we could bump the version
-      export SURGE_VERSION_MAJ=$(echo $SURGE_VERSION | cut -f1 -d.)
-      export SURGE_VERSION_MIN=$(echo $SURGE_VERSION | cut -f2 -d.)
-      # echo $SURGE_VERSION_MAJ
-      ((SURGE_VERSION_MIN++))
-      # echo $SURGE_VERSION_MIN
-      export NEXT_SURGE_VERSION="$SURGE_VERSION_MAJ.$SURGE_VERSION_MIN"
-      echo "Next version?: $NEXT_SURGE_VERSION"
-      echo "$NEXT_SURGE_VERSION" > VERSION
     displayName: Perform Release
