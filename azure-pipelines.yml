@@ -153,6 +153,8 @@ jobs:
       set -e
       set -x
 
+      echo $GITHUB_TOKEN
+
       if [ "$(git log -1 --pretty=format:'%an')" == "build-bot" ]; then
         exit 0
       fi
