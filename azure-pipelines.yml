@@ -200,10 +200,11 @@ jobs:
       ls -l
       ghr_v0.12.0_linux_amd64/ghr -replace $SURGE_VERSION releases
 
-      echo << EOF > README.md
+      cat << EOF > README.md
       # Surge Synthesizer Releases
       Synthesizer plug-in (previously released as Vember Audio Surge)
       [![Build Status](https://dev.azure.com/surge-synthesizer/surge/_apis/build/status/surge-synthesizer.releases?branchName=master)](https://dev.azure.com/surge-synthesizer/surge/_build/latest?definitionId=1?branchName=master)
+
       ## Download Surge Installers
       * $MACOS_LINK
       * $WINDOWS_LINK
