@@ -136,12 +136,7 @@ jobs:
     SURGE_VERSION: $[ dependencies.Build.outputs['mac.surge.SURGE_VERSION'] ]
 
   steps:
-  - checkout: self
-    # fetchDepth: 1
-
-  - task: DownloadSecureFile@1
-    inputs:
-      secureFile: surge.id_rsa
+  - checkout: none
 
   - task: DownloadSecureFile@1
     inputs:
@@ -161,40 +156,11 @@ jobs:
       set -e
       set -x
 
-      if [ "$(git log -1 --pretty=format:'%an')" == "build-bot" ]; then
-        exit 0
-      fi
-
-      ls -alFh
       echo "SURGE_VERSION: $SURGE_VERSION"
 
-      rm -rf releases
       mkdir -p releases
       mv *.exe releases
       mv *.dmg releases
-
-      export NOW="$(date +%Y-%m-%d)"
-
-      # copy macOS DMG installer
-      if [ -f "$(ls releases/*.dmg)" ]; then
-        export DMG="$(basename $(ls releases/*.dmg))"
-        export MACOS_LINK="[macOS 64-bit AU/VST/VST3](https://github.com/surge-synthesizer/releases/releases/download/$SURGE_VERSION/$DMG) - $NOW"
-      fi
-
-      # copy windows installer
-      if [ -f "$(ls releases/*.exe)" ]; then
-        export EXE="$(basename $(ls releases/*.exe))"
-        export WINDOWS_LINK="[Windows 64-bit VST/VST3](https://github.com/surge-synthesizer/releases/releases/download/$SURGE_VERSION/$EXE) - $NOW"
-      fi
-
-      # basic git config / setup
-      git config --global user.name "build-bot"
-      git config --global user.email "build-bot@localhost"
-
-      # setup git ssh command to use the key
-      ls $AGENT_TEMPDIRECTORY
-      chmod 400 $AGENT_TEMPDIRECTORY/surge.id_rsa
-      export GIT_SSH_COMMAND="ssh -oStrictHostKeyChecking=no -i $AGENT_TEMPDIRECTORY/surge.id_rsa"
 
       # perform GH release
       . $AGENT_TEMPDIRECTORY/surge-build-bot.sh
@@ -204,24 +170,4 @@ jobs:
         export DRAFT="-draft"
       fi
       ghr_v0.12.0_linux_amd64/ghr $DRAFT -replace $SURGE_VERSION releases
-
-      cat << EOF > README.md
-      # Surge Synthesizer Releases
-      Synthesizer plug-in (previously released as Vember Audio Surge)
-      <!--
-      [![Build Status](https://dev.azure.com/surge-synthesizer/surge/_apis/build/status/surge-synthesizer.releases?branchName=master)](https://dev.azure.com/surge-synthesizer/surge/_build/latest?definitionId=1?branchName=master)
-      -->
-      
-      ## Download Surge Installers
-      * $MACOS_LINK
-      * $WINDOWS_LINK
-      EOF
-
-      # commit changes
-      git checkout master
-      git add README.md
-      # git add releases
-      git commit -m "Release to $SURGE_VERSION"
-      git remote set-url origin git@github.com:surge-synthesizer/releases.git
-      git push
     displayName: Perform Release
