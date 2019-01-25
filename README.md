@@ -5,5 +5,5 @@ Synthesizer plug-in (previously released as Vember Audio Surge)
 -->
 
 ## Download Surge Installers
-* [macOS 64-bit AU/VST/VST3](https://github.com/surge-synthesizer/releases/releases/download/1.6.0/Surge-1.6.0-Setup.dmg) - 2019-01-25
-* [Windows 64-bit VST/VST3](https://github.com/surge-synthesizer/releases/releases/download/1.6.0/Surge-1.6.0-Setup.exe) - 2019-01-25
+* [macOS 64-bit AU/VST/VST3](https://github.com/surge-synthesizer/releases/releases/download/master/Surge-master-Setup.dmg) - 2019-01-25
+* [Windows 64-bit VST/VST3](https://github.com/surge-synthesizer/releases/releases/download/master/Surge-master-Setup.exe) - 2019-01-25
