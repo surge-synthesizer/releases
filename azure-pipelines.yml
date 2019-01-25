@@ -136,7 +136,7 @@ jobs:
     SURGE_VERSION: $[ dependencies.Build.outputs['mac.surge.SURGE_VERSION'] ]
 
   steps:
-  - checkout: none
+  - checkout: self
 
   - task: DownloadSecureFile@1
     inputs:
