@@ -175,13 +175,13 @@ jobs:
       # copy macOS DMG installer
       if [ -f "$(ls releases/*.dmg)" ]; then
         export DMG="$(basename $(ls releases/*.dmg))"
-        export MACOS_LINK="[macOS 64-bit AU/VST/VST3](releases/download/$SURGE_VERSION/$DMG) - $NOW"
+        export MACOS_LINK="[macOS 64-bit AU/VST/VST3](https://github.com/surge-synthesizer/releases/releases/download/$SURGE_VERSION/$DMG) - $NOW"
       fi
 
       # copy windows installer
       if [ -f "$(ls releases/*.exe)" ]; then
         export EXE="$(basename $(ls releases/*.exe))"
-        export WINDOWS_LINK="[Windows 64-bit VST/VST3](releases/download/$SURGE_VERSION/$EXE) - $NOW"
+        export WINDOWS_LINK="[Windows 64-bit VST/VST3](https://github.com/surge-synthesizer/releases/releases/download/$SURGE_VERSION/$EXE) - $NOW"
       fi
 
       # basic git config / setup
@@ -203,8 +203,10 @@ jobs:
       cat << EOF > README.md
       # Surge Synthesizer Releases
       Synthesizer plug-in (previously released as Vember Audio Surge)
+      <!--
       [![Build Status](https://dev.azure.com/surge-synthesizer/surge/_apis/build/status/surge-synthesizer.releases?branchName=master)](https://dev.azure.com/surge-synthesizer/surge/_build/latest?definitionId=1?branchName=master)
-
+      -->
+      
       ## Download Surge Installers
       * $MACOS_LINK
       * $WINDOWS_LINK
