@@ -29,6 +29,7 @@ jobs:
 
   - bash: |
       set -e
+      echo "$SURGE_BRANCH"
       ls -alFh $AGENT_TEMPDIRECTORY
       . $AGENT_TEMPDIRECTORY/get-vst2.sh
       echo "VST2SDK_DIR=$VST2SDK_DIR"
