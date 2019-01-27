@@ -155,7 +155,6 @@ jobs:
 
   - bash: |
       set -e
-      set -x
 
       echo "SURGE_VERSION: $SURGE_VERSION"
 
