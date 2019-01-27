@@ -172,6 +172,10 @@ jobs:
 
       echo "SURGE_VERSION: $SURGE_VERSION"
 
+      if ! [[ $SURGE_BRANCH =~ ^(master|release/.+)$ ]]; then
+        exit 1
+      fi
+
       mkdir -p releases
       mv *.exe releases
       mv *.dmg releases
