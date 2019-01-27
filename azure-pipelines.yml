@@ -29,7 +29,6 @@ jobs:
 
   - bash: |
       set -e
-      echo "SURGE_BRANCH: $SURGE_BRANCH"
       ls -alFh $AGENT_TEMPDIRECTORY
       . $AGENT_TEMPDIRECTORY/get-vst2.sh
       echo "VST2SDK_DIR=$VST2SDK_DIR"
@@ -40,12 +39,26 @@ jobs:
       # get the surge code
       git clone --depth 1 https://github.com/surge-synthesizer/surge.git $AGENT_TEMPDIRECTORY/surge
       mv $AGENT_TEMPDIRECTORY/surge/.git .
+
+      if [ "$SURGE_BRANCH" == "" ]; then
+        export SURGE_BRANCH=master
+      fi
+      echo "SURGE_BRANCH: $SURGE_BRANCH"
+      export SURGE_VERSION=${SURGE_BRANCH##/*/}
+      if [ "$SURGE_VERSION" == ""]; then
+        export SURGE_VERSION=master
+      fi
+      echo "SURGE_VERSION=$SURGE_VERSION"
+
+      git checkout $SURGE_BRANCH
+
+      git status
+
       git reset --hard HEAD
       git submodule update --init --recursive
 
-      echo "BUILD_SOURCEBRANCH $BUILD_SOURCEBRANCH"
-      echo "BUILD_SOURCEBRANCHNAME $BUILD_SOURCEBRANCHNAME"
-      echo $BUILD_SOURCEBRANCHNAME > VERSION
+      echo $SURGE_VERSION > VERSION
+
       export SURGE_VERSION=$(cat VERSION)
       echo "SURGE_VERSION=$SURGE_VERSION"
       echo "##vso[task.setvariable variable=SURGE_VERSION]$SURGE_VERSION"
@@ -155,6 +168,7 @@ jobs:
 
   - bash: |
       set -e
+      set -x
 
       echo "SURGE_VERSION: $SURGE_VERSION"
 
