@@ -16,6 +16,11 @@ jobs:
       windows:
         imageName: 'vs2017-win2016'
         isWindows: true
+        x64: true
+      windows-x86:
+        imageName: 'vs2017-win2016'
+        isWindows: true
+        x86: true
 
   pool:
     vmImage: $(imageName)
@@ -107,7 +112,7 @@ jobs:
       solution: 'buildtask.xml'
       maximumCpuCount: true
       platform: 'x64'
-    condition: variables.isWindows
+    condition: and(variables.isWindows, variables.x64)
     displayName: Build Windows x64
 
   - task: MSBuild@1
@@ -115,7 +120,7 @@ jobs:
       solution: 'buildtask.xml'
       maximumCpuCount: true
       platform: 'Win32'
-    condition: variables.isWindows
+    condition: and(variables.isWindows, variables.x86)
     displayName: Build Windows x86
 
   - bash: |
@@ -123,9 +128,16 @@ jobs:
       nuget install chocolatey
       choco install innosetup --version=5.6.1 -y
       iscc installer_win/surge.iss
+    condition: and(variables.isWindows, variables.x64)
+    displayName: Make Windows x64 installer
+
+  - bash: |
+      set -e
+      nuget install chocolatey
+      choco install innosetup --version=5.6.1 -y
       iscc installer_win/surge-x86.iss
-    condition: variables.isWindows
-    displayName: Make Windows installers
+    condition: and(variables.isWindows, variables.x86)
+    displayName: Make Windows x86 installer
 
   - task: PublishPipelineArtifact@0
     inputs:
@@ -184,6 +196,8 @@ jobs:
       if ! [[ $SURGE_BRANCH =~ ^(master|release/.+)$ ]]; then
         exit 1
       fi
+
+      ls -alFh
 
       mkdir -p releases
       mv *.exe releases
