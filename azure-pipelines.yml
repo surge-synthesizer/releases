@@ -205,6 +205,10 @@ jobs:
 
       echo "SURGE_VERSION: $SURGE_VERSION"
 
+      if ! [[ $SURGE_BRANCH =~ ^(master|release/.+)$ ]]; then
+        exit 1
+      fi
+
       ls -alFh
 
       mkdir -p releases
