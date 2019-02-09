@@ -131,6 +131,13 @@ jobs:
     condition: and(variables.isWindows, variables.x64)
     displayName: Make Windows x64 installer
 
+  - task: PublishPipelineArtifact@0
+    inputs:
+      artifactName: 'INSTALLER_WIN_EXE'
+      targetPath: 'installer_win/Output'
+    condition: and(variables.isWindows, variables.x64)
+    displayName: Publish Windows x64 installer
+
   - bash: |
       set -e
       nuget install chocolatey
@@ -141,10 +148,10 @@ jobs:
 
   - task: PublishPipelineArtifact@0
     inputs:
-      artifactName: 'INSTALLER_WIN_EXE'
+      artifactName: 'INSTALLER_WIN_X86_EXE'
       targetPath: 'installer_win/Output'
-    condition: variables.isWindows
-    displayName: Publish Windows installers
+    condition: and(variables.isWindows, variables.x86)
+    displayName: Publish Windows x86 installer
 
   - bash: |
       set -e
@@ -185,6 +192,11 @@ jobs:
   - task: DownloadPipelineArtifact@0
     inputs:
       artifactName: 'INSTALLER_WIN_EXE'
+      targetPath: $(System.DefaultWorkingDirectory)
+
+  - task: DownloadPipelineArtifact@0
+    inputs:
+      artifactName: 'INSTALLER_WIN_X86_EXE'
       targetPath: $(System.DefaultWorkingDirectory)
 
   - bash: |
