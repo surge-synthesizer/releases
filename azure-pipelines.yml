@@ -53,12 +53,12 @@ jobs:
         exit 1
       fi
 
+      echo "SURGE_BRANCH=$SURGE_BRANCH"
       echo "##vso[task.setvariable variable=SURGE_BRANCH]$SURGE_BRANCH"
       echo "##vso[task.setvariable variable=SURGE_BRANCH;isOutput=true]$SURGE_BRANCH"
 
-      echo "SURGE_BRANCH: $SURGE_BRANCH"
-      export SURGE_VERSION="$(echo $SURGE_BRANCH | cut -d"/" -f2)"
-      if [ "$SURGE_VERSION" == "master" ]; then
+      export SURGE_VERSION="${SURGE_BRANCH##*/}"
+      if [ "$SURGE_VERSION" == "master" ] || [ "$SURGE_VERSION" == "" ]; then
         export SURGE_VERSION="NIGHTLY-$(date +%Y-%m-%d)-$(git rev-parse --short HEAD)"
       fi
       echo "SURGE_VERSION=$SURGE_VERSION"
