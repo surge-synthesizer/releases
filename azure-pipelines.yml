@@ -184,6 +184,10 @@ jobs:
     inputs:
       secureFile: surge-build-bot.sh
 
+  - task: DownloadSecureFile@1
+    inputs:
+      secureFile: update-website.sh
+
   - task: DownloadPipelineArtifact@0
     inputs:
       artifactName: 'INSTALLER_MAC_DMG'
@@ -205,6 +209,10 @@ jobs:
 
       echo "SURGE_VERSION: $SURGE_VERSION"
 
+      if ! [[ $SURGE_BRANCH =~ ^(master|release/.+)$ ]]; then
+        exit 1
+      fi
+
       ls -alFh
 
       mkdir -p releases
@@ -217,8 +225,12 @@ jobs:
       curl -L https://github.com/tcnksm/ghr/releases/download/v0.12.0/$GHR.tar.gz --output ghr.tar.gz
       tar zxvf ghr.tar.gz
       if [ "$SURGE_BRANCH" == "master" ]; then
-        export SURGE_VERSION="NIGHTLY"
+        export SURGE_BRANCH="NIGHTLY"
         export PRE="-prerelease"
+      else
+        export SURGE_BRANCH=$SURGE_VERSION
       fi
-      $GHR/ghr $PRE -recreate $SURGE_VERSION releases
+      $GHR/ghr $PRE -recreate $SURGE_BRANCH releases
+
+      . $AGENT_TEMPDIRECTORY/update-website.sh $SURGE_BRANCH $SURGE_VERSION
     displayName: Perform Release
