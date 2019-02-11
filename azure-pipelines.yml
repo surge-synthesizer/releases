@@ -46,11 +46,19 @@ jobs:
       mv $AGENT_TEMPDIRECTORY/surge/.git .
 
       if [ "$SURGE_BRANCH" == "" ]; then
-        export SURGE_BRANCH=master
+        export SURGE_BRANCH='master'
       fi
+
+      if ! [[ $SURGE_BRANCH =~ ^(master|release/.+)$ ]]; then
+        exit 1
+      fi
+
+      echo "##vso[task.setvariable variable=SURGE_BRANCH]$SURGE_BRANCH"
+      echo "##vso[task.setvariable variable=SURGE_BRANCH;isOutput=true]$SURGE_BRANCH"
+
       echo "SURGE_BRANCH: $SURGE_BRANCH"
-      export SURGE_VERSION=${SURGE_BRANCH##/*/}
-      if [ "$SURGE_VERSION" == ""]; then
+      export SURGE_VERSION="$(echo $SURGE_BRANCH | cut -d"/" -f2)"
+      if [ "$SURGE_VERSION" == "master" ]; then
         export SURGE_VERSION="NIGHTLY-$(date +%Y-%m-%d)-$(git rev-parse --short HEAD)"
       fi
       echo "SURGE_VERSION=$SURGE_VERSION"
@@ -176,6 +184,7 @@ jobs:
   condition: succeeded()
   variables:
     SURGE_VERSION: $[ dependencies.Build.outputs['mac.surge.SURGE_VERSION'] ]
+    SURGE_BRANCH: $[ dependencies.Build.outputs['mac.surge.SURGE_BRANCH'] ]
 
   steps:
   - checkout: self
@@ -208,10 +217,6 @@ jobs:
       set -x
 
       echo "SURGE_VERSION: $SURGE_VERSION"
-
-      if ! [[ $SURGE_BRANCH =~ ^(master|release/.+)$ ]]; then
-        exit 1
-      fi
 
       ls -alFh
 
