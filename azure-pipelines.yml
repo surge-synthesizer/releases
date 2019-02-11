@@ -235,7 +235,7 @@ jobs:
       else
         export SURGE_BRANCH=$SURGE_VERSION
       fi
-      $GHR/ghr $PRE -recreate $SURGE_BRANCH releases
+      $GHR/ghr $PRE -b "Release $SURGE_VERSION" -recreate $SURGE_BRANCH releases
 
       . $AGENT_TEMPDIRECTORY/update-website.sh $SURGE_BRANCH $SURGE_VERSION
     displayName: Perform Release
