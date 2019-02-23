@@ -21,6 +21,9 @@ jobs:
         imageName: 'vs2017-win2016'
         isWindows: true
         x86: true
+      linux:
+        imageName: 'ubuntu-16.04'
+        isLinux: true
 
   pool:
     vmImage: $(imageName)
@@ -179,6 +182,42 @@ jobs:
     condition: variables.isMac
     displayName: Publish macOS DMG
 
+  - bash: |
+      set -x
+      pushd $AGENT_TEMPDIRECTORY
+      export PREMAKE_LINUX=https://github.com/premake/premake-core/releases/download/v5.0.0-alpha13/premake-5.0.0-alpha13-linux.tar.gz
+      curl -L $PREMAKE_LINUX --output premake5.tar.gz
+      tar zxvf premake5.tar.gz
+      export PATH=$AGENT_TEMPDIRECTORY:$PATH
+      popd
+      sudo apt-get install -y libgtkmm-3.0-dev
+      sudo apt-get install -y xcb
+      sudo apt-get install -y libxcb-util-dev
+      sudo apt-get install -y libxcb-cursor-dev
+      sudo apt-get install -y libxcb-keysyms1-dev
+      sudo apt-get install -y libxkbcommon-dev
+      sudo apt-get install -y libxkbcommon-x11-dev
+      sudo apt-get install -y devscripts
+      ./build-linux.sh clean && ./build-linux.sh build
+      find  . -name '*'
+    condition: variables.isLinux
+    displayName: Build Linux
+
+  - bash: |
+      echo "SURGE_VERSION=$SURGE_VERSION"
+      pushd installer_linux
+      ./make_deb.sh 
+      popd
+    condition: variables.isLinux
+    displayName: Make Linux deb installer
+
+  - task: PublishPipelineArtifact@0
+    inputs:
+      artifactName: 'INSTALLER_LINUX_DEB'
+      targetPath: 'installer_linux/product'
+    condition: variables.isLinux
+    displayName: Publish Linux deb installer
+
 - job: Release
   dependsOn: Build
   condition: succeeded()
@@ -212,6 +251,11 @@ jobs:
       artifactName: 'INSTALLER_WIN_X86_EXE'
       targetPath: $(System.DefaultWorkingDirectory)
 
+  - task: DownloadPipelineArtifact@0
+    inputs:
+      artifactName: 'INSTALLER_LINUX_DEB'
+      targetPath: $(System.DefaultWorkingDirectory)
+
   - bash: |
       set -e
       set -x
@@ -223,6 +267,7 @@ jobs:
       mkdir -p releases
       mv *.exe releases
       mv *.dmg releases
+      mv *.deb releases
 
       # perform GH release
       . $AGENT_TEMPDIRECTORY/surge-build-bot.sh
