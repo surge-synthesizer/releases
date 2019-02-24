@@ -51,7 +51,7 @@ jobs:
         export SURGE_BRANCH="${SURGE_BRANCH/refs\/heads\/}"
       fi
 
-      if ! [[ $SURGE_BRANCH =~ ^(master|release/.+|refs/heads/release/.+)$ ]]; then
+      if ! [[ $SURGE_BRANCH =~ ^(master|release/.+)$ ]]; then
         exit 1
       fi
 
