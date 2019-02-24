@@ -144,14 +144,6 @@ jobs:
     condition: and(variables.isWindows, variables.x64)
     displayName: Build Windows x64
 
-  - task: MSBuild@1
-    inputs:
-      solution: 'buildtask.xml'
-      maximumCpuCount: true
-      platform: 'Win32'
-    condition: and(variables.isWindows, variables.x86)
-    displayName: Build Windows x86
-
   - bash: |
       set -e
       nuget install chocolatey
@@ -166,6 +158,14 @@ jobs:
       targetPath: 'installer_win/Output'
     condition: and(variables.isWindows, variables.x64)
     displayName: Publish Windows x64 installer
+
+  - task: MSBuild@1
+    inputs:
+      solution: 'buildtask.xml'
+      maximumCpuCount: true
+      platform: 'Win32'
+    condition: and(variables.isWindows, variables.x86)
+    displayName: Build Windows x86
 
   - bash: |
       set -e
