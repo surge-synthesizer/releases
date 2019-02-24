@@ -1,1 +1,1 @@
-# Surge Synthesizer Releases
+[Click here for the Surge synthesizer binaries](releases)
