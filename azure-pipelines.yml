@@ -97,6 +97,24 @@ jobs:
     condition: variables.isMac
     displayName: Build macOS releases
 
+  - bash: |
+      set -e
+      echo "VST2SDK_DIR=$VST2SDK_DIR"
+      echo "SURGE_VERSION=$SURGE_VERSION"
+      pushd installer_mac
+      ./make_installer.sh $SURGE_VERSION --dmg
+      rm -f *.pkg
+      popd
+    condition: variables.isMac
+    displayName: Make macOS installer
+
+  - task: PublishPipelineArtifact@0
+    inputs:
+      artifactName: 'INSTALLER_MAC_DMG'
+      targetPath: 'installer_mac/installer'
+    condition: variables.isMac
+    displayName: Publish macOS DMG
+
   - task: NuGetToolInstaller@0
     condition: variables.isWindows
     displayName: NuGet
@@ -163,24 +181,6 @@ jobs:
       targetPath: 'installer_win/Output'
     condition: and(variables.isWindows, variables.x86)
     displayName: Publish Windows x86 installer
-
-  - bash: |
-      set -e
-      echo "VST2SDK_DIR=$VST2SDK_DIR"
-      echo "SURGE_VERSION=$SURGE_VERSION"
-      pushd installer_mac
-      ./make_installer.sh $SURGE_VERSION --dmg
-      rm -f *.pkg
-      popd
-    condition: variables.isMac
-    displayName: Make macOS installer
-
-  - task: PublishPipelineArtifact@0
-    inputs:
-      artifactName: 'INSTALLER_MAC_DMG'
-      targetPath: 'installer_mac/installer'
-    condition: variables.isMac
-    displayName: Publish macOS DMG
 
   - bash: |
       set -x
