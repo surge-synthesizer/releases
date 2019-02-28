@@ -148,7 +148,7 @@ jobs:
   - bash: |
       set -e
       nuget install chocolatey
-      choco install innosetup --version=5.6.1 -y
+      choco install innosetup --force --version=5.6.1 -y
       iscc installer_win/surge.iss
     condition: and(variables.isWindows, variables.x64)
     displayName: Make Windows x64 installer
@@ -171,7 +171,7 @@ jobs:
   - bash: |
       set -e
       nuget install chocolatey
-      choco install innosetup --version=5.6.1 -y
+      choco install innosetup --force --version=5.6.1 -y
       iscc installer_win/surge-x86.iss
     condition: and(variables.isWindows, variables.x86)
     displayName: Make Windows x86 installer
