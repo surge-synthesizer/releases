@@ -156,7 +156,7 @@ jobs:
       cd installer_win/direct
       ls -l
       pwd
-      7z.exe a Surge.dll Surge.vst3 evil.zip
+      7z.exe a evil.zip Surge.dll Surge.vst3 
       ls -l
       echo mv evil.zip ../Output/Surge-Direct-${SURGE_VERSION}.zip
       mv evil.zip ../Output/Surge-Direct-${SURGE_VERSION}.zip
