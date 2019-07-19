@@ -146,6 +146,25 @@ jobs:
     displayName: Build Windows x64
 
   - bash: |
+      set -x
+      mkdir -p installer_win/direct
+      mkdir -p installer_win/Output
+      ls -l installer_win
+      ls -l target/
+      cp target/vst2/Release/Surge.dll installer_win/direct
+      cp target/vst3/Release/Surge.vst3 installer_win/direct
+      cd installer_win/direct
+      ls -l
+      pwd
+      7z.exe a Surge.dll Surge.vst3 evil.zip
+      ls -l
+      echo mv evil.zip ../Output/Surge-Direct-${SURGE_VERSION}.zip
+      mv evil.zip ../Output/Surge-Direct-${SURGE_VERSION}.zip
+      ls -l ../Output
+    condition: and(variables.isWindows, variables.x64)
+    displayName: Make a dll only zip for EvilDragon
+
+  - bash: |
       set -e
       nuget install chocolatey
       choco install innosetup --force --version=5.6.1 -y
@@ -153,16 +172,6 @@ jobs:
     condition: and(variables.isWindows, variables.x64)
     displayName: Make Windows x64 installer
 
-  - bash: |
-      set -e
-      mkdir -p installer_win/direct
-      cp target/vst2/Release/Surge.dll installer_win/direct
-      cp target/vst3/Release/Surge.vst3 installer_win/direct
-      cd installer_win/direct
-      7z.exe a Surge* evil.zip
-      mv evil.zip ../Output/Surge-Direct-${SURGE_VERSION}.zip
-    condition: and(variables.isWindows, variables.x64)
-    displayName: Make a dll only zip for EvilDragon
 
   - task: PublishPipelineArtifact@0
     inputs:
