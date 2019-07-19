@@ -153,6 +153,17 @@ jobs:
     condition: and(variables.isWindows, variables.x64)
     displayName: Make Windows x64 installer
 
+  - bash: |
+      set -e
+      mkdir -f installer_win/direct
+      cp target/vst2/Release/Surge.dll installer_win/direct
+      cp target/vst3/Release/Surge.vst3 installer_win/direct
+      cd installer_win/direct
+      7z.exe a Surge* evil.zip
+      mv evil.zip ../Output/Surge-Direct-${SURGE_VERSION}.zip
+    condition: and(variables.isWindows, variables.x64)
+    displayName: Make a dll only zip for EvilDragon
+
   - task: PublishPipelineArtifact@0
     inputs:
       artifactName: 'INSTALLER_WIN_EXE'
@@ -267,6 +278,7 @@ jobs:
 
       mkdir -p releases
       mv *.exe releases
+      mv *.zip releases
       mv *.dmg releases
       mv *.deb releases
 
