@@ -155,7 +155,7 @@ jobs:
 
   - bash: |
       set -e
-      mkdir -f installer_win/direct
+      mkdir -p installer_win/direct
       cp target/vst2/Release/Surge.dll installer_win/direct
       cp target/vst3/Release/Surge.vst3 installer_win/direct
       cd installer_win/direct
