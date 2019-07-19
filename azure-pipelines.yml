@@ -158,8 +158,8 @@ jobs:
       pwd
       7z.exe a evil.zip Surge.dll Surge.vst3 
       ls -l
-      echo mv evil.zip ../Output/Surge-Direct-${SURGE_VERSION}.zip
-      mv evil.zip ../Output/Surge-Direct-${SURGE_VERSION}.zip
+      echo mv evil.zip ../Output/Surge-Win64DLL-${SURGE_VERSION}.zip
+      mv evil.zip ../Output/Surge-Win64DLL-${SURGE_VERSION}.zip
       ls -l ../Output
     condition: and(variables.isWindows, variables.x64)
     displayName: Make a dll only zip for EvilDragon
