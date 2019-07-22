@@ -93,6 +93,10 @@ jobs:
 
       export PATH=$AGENT_TEMPDIRECTORY:$PATH
       ./build-osx.sh --build --verbose
+
+      # In the release pipeline we also want the surge-fx
+      ./build-osx.sh --get-and-build-fx
+
       ls -alFh target
       ls -alFh products
     condition: variables.isMac
