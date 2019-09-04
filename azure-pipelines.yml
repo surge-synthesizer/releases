@@ -1,10 +1,7 @@
 # Surge synth build script
 # https://aka.ms/yaml
 
-trigger:
-  branches:
-    exclude:
-    - master
+trigger: none
 
 jobs:
 - job: Build
