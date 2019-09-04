@@ -161,8 +161,8 @@ jobs:
       unzip juce-5.4.3-windows.zip
       cd ..
       assets/JUCE/Projucer.exe --resave surge-fx.jucer
-    condition: and(variables.isWindows, variables.x64)
-    displayName: Setup Windows x64 EffectsBank
+    condition: variables.isWindows
+    displayName: Setup Windows EffectsBank
 
   - task: MSBuild@1
     inputs:
@@ -173,6 +173,14 @@ jobs:
     condition: and(variables.isWindows, variables.x64)
     displayName: Build Windows x64 EffectsBank
 
+  - task: MSBuild@1
+    inputs:
+      solution: 'fxbuild\surge-fx\Builds\VisualStudio2017\SurgeEffectsBank.sln'
+      maximumCpuCount: true
+      platform: 'Win32'
+      configuration: 'ReleaseWin32'
+    condition: and(variables.isWindows, variables.x86)
+    displayName: Build Windows Win32 EffectsBank
 
   - bash: |
       set -x
