@@ -148,16 +148,45 @@ jobs:
 
   - bash: |
       set -x
+      mkdir -p fxbuild
+      cd fxbuild
+      git clone https://github.com/surge-synthesizer/surge-fx
+      cd surge-fx
+      git submodule update --init --recursive
+
+      mkdir assets
+      curl -o assets/juce-5.4.3-windows.zip https://d30pueezughrda.cloudfront.net/juce/juce-5.4.3-windows.zip
+
+      cd assets
+      unzip juce-5.4.3-windows.zip
+      cd ..
+      assets/JUCE/Projucer.exe --resave surge-fx.jucer
+    condition: and(variables.isWindows, variables.x64)
+    displayName: Setup Windows x64 EffectsBank
+
+  - task: MSBuild@1
+    inputs:
+      solution: 'fxbuild\surge-fx\Builds\VisualStudio2017\SurgeEffectsBank.sln'
+      maximumCpuCount: true
+      platform: 'x64'
+      configuration: 'Release'
+    condition: and(variables.isWindows, variables.x64)
+    displayName: Build Windows x64 EffectsBank
+
+
+  - bash: |
+      set -x
       mkdir -p installer_win/direct
       mkdir -p installer_win/Output
       ls -l installer_win
       ls -l target/
       cp target/vst2/Release/Surge.dll installer_win/direct
       cp target/vst3/Release/Surge.vst3 installer_win/direct
+      cp fxbuild/surge-fx/Builds/VisualStudio2017/x64/Release/VST3/SurgeEffectsBank.vst3 installer_win/direct
       cd installer_win/direct
       ls -l
       pwd
-      7z.exe a evil.zip Surge.dll Surge.vst3 
+      7z.exe a evil.zip Surge.dll Surge.vst3 SurgeEffectsBank.vst3
       ls -l
       echo mv evil.zip ../Output/Surge-Win64DLL-${SURGE_VERSION}.zip
       mv evil.zip ../Output/Surge-Win64DLL-${SURGE_VERSION}.zip
