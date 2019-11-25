@@ -4,7 +4,55 @@
 trigger: none
 
 jobs:
+- job: MakeTarball
+  steps:
+  - checkout: self
+
+  - bash: |
+      set -e
+      set -o xtrace
+
+      if [ "$SURGE_BRANCH" == "" ]; then
+        export SURGE_BRANCH='master'
+      else
+        export SURGE_BRANCH="${SURGE_BRANCH/refs\/heads\/}"
+      fi
+
+      if ! [[ $SURGE_BRANCH =~ ^(master|release/.+)$ ]]; then
+        exit 1
+      fi
+
+      export SURGE_VERSION="${SURGE_BRANCH##*/}"
+
+      # get the surge code
+      git clone --depth 1 --branch $SURGE_BRANCH https://github.com/surge-synthesizer/surge.git 
+      cd surge
+      git reset --hard $SURGE_BRANCH
+      git submodule update --init --recursive
+
+      if [ "$SURGE_VERSION" == "master" ]; then
+        export SURGE_VERSION="NIGHTLY-$(date +%Y-%m-%d)-$(git rev-parse --short HEAD)"
+      fi
+      echo "SURGE_VERSION=$SURGE_VERSION"
+      
+      # set the active version
+      echo $SURGE_VERSION > VERSION
+
+      cd ..
+      mkdir srctar
+      tar -cvzf srctar/SurgeSrc_${SURGE_VERSION}.tgz surge
+    displayName: Get source for Tarball
+    
+  - task: PublishPipelineArtifact@0
+    inputs:
+      artifactName: 'SOURCE_TARBALL'
+      targetPath: 'srctar'
+    displayName: Publish Source Tarball
+
+
 - job: Build
+  dependsOn: MakeTarball
+  condition: succeeded()
   strategy:
     matrix:
       mac:
@@ -277,6 +325,7 @@ jobs:
     condition: variables.isLinux
     displayName: Publish Linux deb installer
 
+
 - job: Release
   dependsOn: Build
   condition: succeeded()
@@ -315,6 +364,11 @@ jobs:
       artifactName: 'INSTALLER_LINUX_DEB'
       targetPath: $(System.DefaultWorkingDirectory)
 
+  - task: DownloadPipelineArtifact@0
+    inputs:
+      artifactName: 'SOURCE_TARBALL'
+      targetPath: $(System.DefaultWorkingDirectory)
+
   - bash: |
       set -e
       set -x
@@ -328,6 +382,10 @@ jobs:
       mv *.zip releases
       mv *.dmg releases
       mv *.deb releases
+      mv *.tgz releases
+
+      openssl dgst -sha256 releases/* > release_sha256.txt
+      mv release_sha256.txt releases
 
       # perform GH release
       . $AGENT_TEMPDIRECTORY/surge-build-bot.sh
