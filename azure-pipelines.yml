@@ -311,7 +311,8 @@ jobs:
   - bash: |
       echo "SURGE_VERSION=$SURGE_VERSION"
       pushd installer_linux
-      ./make_deb.sh 
+      echo sudo makedeb so we get root file perms, since --root-owner-group doesn't work on ubuntu 16.04
+      sudo ./make_deb.sh 
       popd
     condition: variables.isLinux
     displayName: Make Linux deb installer
