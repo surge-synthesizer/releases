@@ -38,6 +38,9 @@ jobs:
       # set the active version
       echo $SURGE_VERSION > VERSION
 
+      # Remove the .git directory
+      find . -name ".git" -exec rm -rf {} \; || echo "I tried"
+
       cd ..
       mkdir srctar
       tar -cvzf srctar/SurgeSrc_${SURGE_VERSION}.tgz surge
