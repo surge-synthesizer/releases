@@ -119,8 +119,7 @@ jobs:
       ls -al .
       ls -al libs
       git status
-      more < .gitmodules
-      
+      cat .gitsubmodules      
       git submodule update --init --recursive
 
       if [ "$SURGE_VERSION" == "master" ]; then
