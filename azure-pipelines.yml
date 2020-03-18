@@ -340,7 +340,7 @@ jobs:
   condition: succeeded()
   variables:
     SURGE_VERSION: $[ dependencies.Build.outputs['mac.surge.SURGE_VERSION'] ]
-    SURGE_BRANCH: $[ dependencies.Build.outputs['mac.surge.SURGE_BRANCH'] ]
+    SURGE_BRANCH: $[ dependencies.Build.outputs['mac.surge.SURGE_LOCAL_BRANCH'] ]
 
   steps:
   - checkout: self
@@ -401,10 +401,14 @@ jobs:
       export GHR=ghr_v0.12.0_linux_amd64
       curl -L https://github.com/tcnksm/ghr/releases/download/v0.12.0/$GHR.tar.gz --output ghr.tar.gz
       tar zxvf ghr.tar.gz
+
+      echo "SURGE BRANCH is $SURGE_BRANCH"
       if [ "$SURGE_BRANCH" == "master" ]; then
+        echo "Exporting to NIGHTLY"
         export SURGE_LOCAL_BRANCH="NIGHTLY"
         export PRE="-prerelease"
       else
+        export "Exporting to new version $SURGE_VERSION"
         export SURGE_LOCAL_BRANCH=$SURGE_VERSION
       fi
       $GHR/ghr $PRE -b "Release $SURGE_VERSION" -recreate $SURGE_LOCAL_BRANCH releases
