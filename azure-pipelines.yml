@@ -112,7 +112,8 @@ jobs:
 
       # get the surge code
       git clone --depth 1 --branch $SURGE_LOCAL_BRANCH https://github.com/surge-synthesizer/surge.git $AGENT_TEMPDIRECTORY/surge
-      mv $AGENT_TEMPDIRECTORY/surge/.git .
+      mv -f $AGENT_TEMPDIRECTORY/surge/* .
+      mv -f $AGENT_TEMPDIRECTORY/surge/.git .   
       git reset --hard $SURGE_LOCAL_BRANCH
       ls -al .
       ls -al libs
