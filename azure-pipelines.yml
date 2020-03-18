@@ -112,7 +112,7 @@ jobs:
 
       # get the surge code
       git clone --depth 1 --branch $SURGE_LOCAL_BRANCH https://github.com/surge-synthesizer/surge.git $AGENT_TEMPDIRECTORY/surge
-      cd $AGENT_TEMPDIRECTORY/surge
+      mv $AGENT_TEMPDIRECTORY/surge/.git .
       git reset --hard $SURGE_LOCAL_BRANCH
       git submodule update --init --recursive
 
@@ -140,8 +140,6 @@ jobs:
       popd
 
       export PATH=$AGENT_TEMPDIRECTORY:$PATH
-
-      cd $AGENT_TEMPDIRECTORY/surge
       ./build-osx.sh --build --verbose
 
       # In the release pipeline we also want the surge-fx
@@ -156,7 +154,6 @@ jobs:
       set -e
       echo "VST2SDK_DIR=$VST2SDK_DIR"
       echo "SURGE_VERSION=$SURGE_VERSION"
-      cd $AGENT_TEMPDIRECTORY/surge
       pushd installer_mac
       ./make_installer.sh $SURGE_VERSION --dmg
       rm -f *.pkg
@@ -167,7 +164,7 @@ jobs:
   - task: PublishPipelineArtifact@0
     inputs:
       artifactName: 'INSTALLER_MAC_DMG'
-      targetPath: '$AGENT_TEMPDIRECTORY/surge/installer_mac/installer'
+      targetPath: 'installer_mac/installer'
     condition: variables.isMac
     displayName: Publish macOS DMG
 
@@ -183,8 +180,6 @@ jobs:
       unzip premake5.zip
       popd
 
-      cd $AGENT_TEMPDIRECTORY/surge
-
       export PATH=$AGENT_TEMPDIRECTORY:$PATH
       premake5 vs2017
       ls -alFh
@@ -196,7 +191,7 @@ jobs:
 
   - task: MSBuild@1
     inputs:
-      solution: '$AGENT_TEMPDIRECTORY/surge/buildtask.xml'
+      solution: 'buildtask.xml'
       maximumCpuCount: true
       platform: 'x64'
     condition: and(variables.isWindows, variables.x64)
@@ -240,7 +235,6 @@ jobs:
 
   - bash: |
       set -x
-      cd $AGENT_TEMPDIRECTORY/surge
       mkdir -p installer_win/direct
       mkdir -p installer_win/Output
       ls -l installer_win
@@ -270,13 +264,13 @@ jobs:
   - task: PublishPipelineArtifact@0
     inputs:
       artifactName: 'INSTALLER_WIN_EXE'
-      targetPath: '$AGENT_TEMPDIRECTORY/surge/installer_win/Output'
+      targetPath: 'installer_win/Output'
     condition: and(variables.isWindows, variables.x64)
     displayName: Publish Windows x64 installer
 
   - task: MSBuild@1
     inputs:
-      solution: '$AGENT_TEMPDIRECTORY/surge/buildtask.xml'
+      solution: 'buildtask.xml'
       maximumCpuCount: true
       platform: 'Win32'
     condition: and(variables.isWindows, variables.x86)
@@ -284,7 +278,6 @@ jobs:
 
   - bash: |
       set -e
-      cd $AGENT_TEMPDIRECTORY/surge
       nuget install innosetup
       iscc installer_win/surge-x86.iss
     condition: and(variables.isWindows, variables.x86)
@@ -293,7 +286,7 @@ jobs:
   - task: PublishPipelineArtifact@0
     inputs:
       artifactName: 'INSTALLER_WIN_X86_EXE'
-      targetPath: '$AGENT_TEMPDIRECTORY/surge/installer_win/Output'
+      targetPath: 'installer_win/Output'
     condition: and(variables.isWindows, variables.x86)
     displayName: Publish Windows x86 installer
 
@@ -313,7 +306,6 @@ jobs:
       sudo apt-get install -y libxkbcommon-dev
       sudo apt-get install -y libxkbcommon-x11-dev
       sudo apt-get install -y devscripts
-      cd $AGENT_TEMPDIRECTORY/surge
       ./build-linux.sh clean && ./build-linux.sh build
       find  . -name '*'
     condition: variables.isLinux
@@ -321,7 +313,7 @@ jobs:
 
   - bash: |
       echo "SURGE_VERSION=$SURGE_VERSION"
-      pushd $AGENT_TEMPDIRECTORY/surge/installer_linux
+      pushd installer_linux
       echo "sudo makedeb so we get root file perms, since --root-owner-group doesn't work on ubuntu 16.04"
       echo "sudo ./make_deb.sh $SURGE_VERSION"
       sudo ./make_deb.sh "$SURGE_VERSION"
@@ -332,7 +324,7 @@ jobs:
   - task: PublishPipelineArtifact@0
     inputs:
       artifactName: 'INSTALLER_LINUX_DEB'
-      targetPath: '$AGENT_TEMPDIRECTORY/surge/installer_linux/product'
+      targetPath: 'installer_linux/product'
     condition: variables.isLinux
     displayName: Publish Linux deb installer
 
@@ -342,7 +334,7 @@ jobs:
   condition: succeeded()
   variables:
     SURGE_VERSION: $[ dependencies.Build.outputs['mac.surge.SURGE_VERSION'] ]
-    SURGE_BRANCH: $[ dependencies.Build.outputs['mac.surge.SURGE_LOCAL_BRANCH'] ]
+    SURGE_BRANCH: $[ dependencies.Build.outputs['mac.surge.SURGE_BRANCH'] ]
 
   steps:
   - checkout: self
