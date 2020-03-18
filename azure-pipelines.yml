@@ -104,8 +104,8 @@ jobs:
       fi
 
       echo "SURGE_LOCAL_BRANCH=$SURGE_LOCAL_BRANCH"
-      echo "##vso[task.setvariable variable=SURGE_BRANCH]$SURGE_LOCAL_BRANCH"
-      echo "##vso[task.setvariable variable=SURGE_BRANCH;isOutput=true]$SURGE_LOCAL_BRANCH"
+      echo "##vso[task.setvariable variable=SURGE_LOCAL_BRANCH]$SURGE_LOCAL_BRANCH"
+      echo "##vso[task.setvariable variable=SURGE_LOCAL_BRANCH;isOutput=true]$SURGE_LOCAL_BRANCH"
 
       export SURGE_VERSION="${SURGE_LOCAL_BRANCH##*/}"
       echo "SURGE_VERSION=$SURGE_VERSION"
