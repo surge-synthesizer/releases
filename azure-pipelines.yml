@@ -140,7 +140,7 @@ jobs:
   - bash: |
       set -e
       pushd $AGENT_TEMPDIRECTORY
-      export PREMAKE_MAC=https://github.com/premake/premake-core/releases/download/v5.0.0-alpha13/premake-5.0.0-alpha13-macosx.tar.gz
+      export PREMAKE_MAC=https://github.com/premake/premake-core/releases/download/v5.0.0-alpha14/premake-5.0.0-alpha14-macosx.tar.gz
       curl -L $PREMAKE_MAC --output premake5.tar.gz
       tar zxvf premake5.tar.gz
       popd
