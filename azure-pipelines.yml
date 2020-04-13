@@ -212,10 +212,10 @@ jobs:
       git submodule update --init --recursive
 
       mkdir assets
-      curl -o assets/juce-5.4.3-windows.zip https://d30pueezughrda.cloudfront.net/juce/juce-5.4.3-windows.zip
+      curl -o assets/juce-5.4.7-windows.zip https://d30pueezughrda.cloudfront.net/juce/juce-5.4.7-windows.zip
 
       cd assets
-      unzip juce-5.4.3-windows.zip
+      unzip juce-5.4.7-windows.zip
       cd ..
       assets/JUCE/Projucer.exe --resave surge-fx.jucer
     condition: variables.isWindows
