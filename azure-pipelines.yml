@@ -151,7 +151,6 @@ jobs:
       # In the release pipeline we also want the surge-fx
       ./build-osx.sh --get-and-build-fx
 
-      ls -alFh target
       ls -alFh products
     condition: variables.isMac
     displayName: Build macOS releases
