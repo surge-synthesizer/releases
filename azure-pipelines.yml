@@ -176,9 +176,10 @@ jobs:
 
       mkdir -p build
       cmake -Bbuild -A x64
-
+      ls -al build
+      
       # need this because MSBuild.restoreNugetPackages: true fails
-      nuget restore .
+      nuget restore build
     condition: and(variables.isWindows, variables.x64)
     displayName: Setup Windows Project
 
@@ -187,8 +188,10 @@ jobs:
 
       mkdir -p build
       cmake -Bbuild -A Win32
+      ls -al build
+      
       # need this because MSBuild.restoreNugetPackages: true fails
-      nuget restore .
+      nuget restore build
     condition: and(variables.isWindows, variables.x86)
     displayName: Setup Windows Project
 
