@@ -79,17 +79,6 @@ jobs:
   steps:
   - checkout: none
 
-  - task: DownloadSecureFile@1
-    inputs:
-      secureFile: get-vst2.sh
-
-  - bash: |
-      set -e
-      ls -alFh $AGENT_TEMPDIRECTORY
-      . $AGENT_TEMPDIRECTORY/get-vst2.sh
-      echo "VST2SDK_DIR=$VST2SDK_DIR"
-    displayName: Get VST 2 SDK
-
   - bash: |
       set -e
 
@@ -151,7 +140,6 @@ jobs:
 
   - bash: |
       set -e
-      echo "VST2SDK_DIR=$VST2SDK_DIR"
       echo "SURGE_VERSION=$SURGE_VERSION"
       pushd installer_mac
       ./make_installer.sh $SURGE_VERSION --dmg
