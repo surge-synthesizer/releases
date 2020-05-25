@@ -383,7 +383,6 @@ jobs:
 
       mkdir -p releases
       mv *.exe releases
-      mv *.zip releases
       mv *.dmg releases
       mv *.deb releases
       mv *.tgz releases
