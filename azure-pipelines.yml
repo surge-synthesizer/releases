@@ -79,6 +79,8 @@ jobs:
   steps:
   - checkout: none
 
+### SETUP SECTION
+
   - bash: |
       set -e
 
@@ -124,36 +126,63 @@ jobs:
       echo "##vso[task.setvariable variable=SURGE_VERSION]$SURGE_VERSION"
       echo "##vso[task.setvariable variable=SURGE_VERSION;isOutput=true]$SURGE_VERSION"
     name: surge
-    displayName: Submodule init
+    displayName: Setup Source and Version
+
+  - bash: |
+      set -x
+      sudo apt-get update
+
+      # Requirements for Surge
+      
+      sudo apt-get install -y libgtkmm-3.0-dev
+      sudo apt-get install -y xcb
+      sudo apt-get install -y libxcb-util-dev
+      sudo apt-get install -y libxcb-cursor-dev
+      sudo apt-get install -y libxcb-keysyms1-dev
+      sudo apt-get install -y libxkbcommon-dev
+      sudo apt-get install -y libxkbcommon-x11-dev
+      sudo apt-get install -y devscripts
+
+      # Requirements for surge-fx
+      sudo apt-get install -y libgtk-3-dev
+      sudo apt-get install -y libwebkit2gtk-4.0
+      sudo apt-get install -y libwebkit2gtk-4.0-dev
+      sudo apt-get install -y libcurl4-openssl-dev
+      sudo apt-get install -y alsa
+      sudp apt-get install -y alsa-tools
+      sudo apt-get install -y libasound2-dev
+      sudo apt-get install -y jack
+      sudo apt-get install -y libjack-dev
+      sudo apt-get install -y libfreetype6-dev
+      sudo apt-get install -y libxinerama-dev
+      sudo apt-get install -y libxcb-xinerama0
+      sudo apt-get install -y libxinerama1
+      sudo apt-get install -y x11proto-xinerama-dev
+      sudo apt-get install -y libxrandr-dev
+      sudo apt-get install -y libgl1-mesa-dev
+      sudo apt-get install -y libxcursor-dev 
+      sudo apt-get install -y libxcursor1 
+      sudo apt-get install -y libxcb-cursor-dev 
+      sudo apt-get install -y libxcb-cursor0
+
+    condition: variables.isLinux
+    displayName: Setup Linux Host
+
+#### DO THE SURGE BUILDS
+
+  - bash: |
+      ./build-linux.sh clean && ./build-linux.sh build
+
+    condition: variables.isLinux
+    displayName: Build Linux Surge
 
   - bash: |
       set -e
 
       ./build-osx.sh --build --verbose
 
-      # In the release pipeline we also want the surge-fx
-      ./build-osx.sh --get-and-build-fx
-
-      ls -alFh products
     condition: variables.isMac
-    displayName: Build macOS releases
-
-  - bash: |
-      set -e
-      echo "SURGE_VERSION=$SURGE_VERSION"
-      pushd installer_mac
-      ./make_installer.sh $SURGE_VERSION --dmg
-      rm -f *.pkg
-      popd
-    condition: variables.isMac
-    displayName: Make macOS installer
-
-  - task: PublishPipelineArtifact@0
-    inputs:
-      artifactName: 'INSTALLER_MAC_DMG'
-      targetPath: 'installer_mac/installer'
-    condition: variables.isMac
-    displayName: Publish macOS DMG
+    displayName: Build macOS Surge
 
   - task: NuGetToolInstaller@0
     condition: variables.isWindows
@@ -183,49 +212,81 @@ jobs:
     condition: and(variables.isWindows, variables.x86)
     displayName: Setup Windows Project
 
-  - task: MSBuild@1
-    inputs:
-      solution: 'buildtask.xml'
-      maximumCpuCount: true
-      platform: 'x64'
-    condition: and(variables.isWindows, variables.x64)
-    displayName: Build Windows x64
 
   - bash: |
-      set -x
-      mkdir -p fxbuild
-      cd fxbuild
-      git clone https://github.com/surge-synthesizer/surge-fx
+      set -e
+
+      cmake --build build --config Release 
+    condition: and(variables.isWindows, variables.x86)
+    displayName: Build Windows
+
+#### FX Stage
+
+  - bash: |
+      set -e
+
+      git clone https://github.com/surge-synthesizer/surge-fx.git
       cd surge-fx
       git submodule update --init --recursive
 
-      mkdir assets
-      curl -o assets/juce-5.4.7-windows.zip https://d30pueezughrda.cloudfront.net/juce/juce-5.4.7-windows.zip
+    condition: variables.isMac
+    displayName: Clone FX
 
-      cd assets
-      unzip juce-5.4.7-windows.zip
-      cd ..
-      assets/JUCE/Projucer.exe --resave surge-fx.jucer
-    condition: variables.isWindows
-    displayName: Setup Windows EffectsBank
+  - bash: |
+      set -e
 
-  - task: MSBuild@1
-    inputs:
-      solution: 'fxbuild\surge-fx\Builds\VisualStudio2017\SurgeEffectsBank.sln'
-      maximumCpuCount: true
-      platform: 'x64'
-      configuration: 'Release'
+      cmake -Bbuild
+      cmake --build build --config Release --target well-named-assets
+
+    condition: variables.isLinux
+    displayName: Build Linux FX Plugin
+
+  - bash: |
+      set -e
+
+      cmake -Bbuild
+      cmake --build build --config Release --target well-named-assets
+
     condition: and(variables.isWindows, variables.x64)
-    displayName: Build Windows x64 EffectsBank
+    displayName: Build Win 64 bit FX Plugin
 
-  - task: MSBuild@1
-    inputs:
-      solution: 'fxbuild\surge-fx\Builds\VisualStudio2017\SurgeEffectsBank.sln'
-      maximumCpuCount: true
-      platform: 'Win32'
-      configuration: 'ReleaseWin32'
+  - bash: |
+      set -e
+
+      cmake -Bbuild -A Win32
+      cmake --build build --config Release --target well-named-assets
+
     condition: and(variables.isWindows, variables.x86)
-    displayName: Build Windows Win32 EffectsBank
+    displayName: Build Win 64 bit FX Plugin
+
+  - bash: |
+      set -e
+
+      cmake -Bbuild -GXcode
+      cmake --build build --config Release --target well-named-assets
+
+    condition: variables.isMac
+    displayName: Build Mac FX Plugin
+
+
+### Make the installers
+
+  - bash: |
+      set -e
+      echo "SURGE_VERSION=$SURGE_VERSION"
+      pushd installer_mac
+      ./make_installer.sh $SURGE_VERSION --dmg
+      rm -f *.pkg
+      popd
+    condition: variables.isMac
+    displayName: Make macOS installer
+
+  - task: PublishPipelineArtifact@0
+    inputs:
+      artifactName: 'INSTALLER_MAC_DMG'
+      targetPath: 'installer_mac/installer'
+    condition: variables.isMac
+    displayName: Publish macOS DMG
 
   - bash: |
       set -x
@@ -262,14 +323,6 @@ jobs:
     condition: and(variables.isWindows, variables.x64)
     displayName: Publish Windows x64 installer
 
-  - task: MSBuild@1
-    inputs:
-      solution: 'buildtask.xml'
-      maximumCpuCount: true
-      platform: 'Win32'
-    condition: and(variables.isWindows, variables.x86)
-    displayName: Build Windows x86
-
   - bash: |
       set -e
       nuget install innosetup
@@ -283,22 +336,6 @@ jobs:
       targetPath: 'installer_win/Output'
     condition: and(variables.isWindows, variables.x86)
     displayName: Publish Windows x86 installer
-
-  - bash: |
-      set -x
-
-      sudo apt-get install -y libgtkmm-3.0-dev
-      sudo apt-get install -y xcb
-      sudo apt-get install -y libxcb-util-dev
-      sudo apt-get install -y libxcb-cursor-dev
-      sudo apt-get install -y libxcb-keysyms1-dev
-      sudo apt-get install -y libxkbcommon-dev
-      sudo apt-get install -y libxkbcommon-x11-dev
-      sudo apt-get install -y devscripts
-      ./build-linux.sh clean && ./build-linux.sh build
-      find  . -name '*'
-    condition: variables.isLinux
-    displayName: Build Linux
 
   - bash: |
       echo "SURGE_VERSION=$SURGE_VERSION"
