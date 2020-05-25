@@ -198,7 +198,7 @@ jobs:
       # need this because MSBuild.restoreNugetPackages: true fails
       nuget restore build
     condition: and(variables.isWindows, variables.x64)
-    displayName: Setup Windows Project
+    displayName: Setup Windows 64 Project
 
   - bash: |
       set -e
@@ -210,14 +210,14 @@ jobs:
       # need this because MSBuild.restoreNugetPackages: true fails
       nuget restore build
     condition: and(variables.isWindows, variables.x86)
-    displayName: Setup Windows Project
+    displayName: Setup Windows 32 Project
 
 
   - bash: |
       set -e
 
       cmake --build build --config Release 
-    condition: and(variables.isWindows, variables.x86)
+    condition: variables.isWindows
     displayName: Build Windows
 
 #### FX Stage
@@ -235,6 +235,7 @@ jobs:
   - bash: |
       set -e
 
+      cd surge-fx
       cmake -Bbuild
       cmake --build build --config Release --target well-named-assets
 
@@ -243,7 +244,8 @@ jobs:
 
   - bash: |
       set -e
-
+      
+      cd surge-fx
       cmake -Bbuild
       cmake --build build --config Release --target well-named-assets
 
@@ -253,15 +255,17 @@ jobs:
   - bash: |
       set -e
 
+      cd surge-fx
       cmake -Bbuild -A Win32
       cmake --build build --config Release --target well-named-assets
 
     condition: and(variables.isWindows, variables.x86)
-    displayName: Build Win 64 bit FX Plugin
+    displayName: Build Win 32 bit FX Plugin
 
   - bash: |
       set -e
 
+      cd surge-fx
       cmake -Bbuild -GXcode
       cmake --build build --config Release --target well-named-assets
 
