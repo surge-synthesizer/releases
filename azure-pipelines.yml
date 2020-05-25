@@ -279,6 +279,10 @@ jobs:
     condition: variables.isMac
     displayName: mac - publish DMG
 
+  - task: NuGetToolInstaller@0
+    condition: variables.isWindows
+    displayName: win - Install NuGet for ISCC
+    
   - bash: |
       set -e
       nuget install innosetup
