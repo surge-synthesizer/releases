@@ -126,7 +126,7 @@ jobs:
       echo "##vso[task.setvariable variable=SURGE_VERSION]$SURGE_VERSION"
       echo "##vso[task.setvariable variable=SURGE_VERSION;isOutput=true]$SURGE_VERSION"
     name: surge
-    displayName: Setup Source and Version
+    displayName: all - Setup Source and Version
 
   - bash: |
       set -x
@@ -166,7 +166,7 @@ jobs:
       sudo apt-get install -y libxcb-cursor0
 
     condition: variables.isLinux
-    displayName: Setup Linux Host
+    displayName: linux - Setup Host
 
 #### DO THE SURGE BUILDS
 
@@ -174,7 +174,7 @@ jobs:
       ./build-linux.sh clean && ./build-linux.sh build
 
     condition: variables.isLinux
-    displayName: Build Linux Surge
+    displayName: linux - Build Surge
 
   - bash: |
       set -e
@@ -182,35 +182,23 @@ jobs:
       ./build-osx.sh --build --verbose
 
     condition: variables.isMac
-    displayName: Build macOS Surge
-
-  - task: NuGetToolInstaller@0
-    condition: variables.isWindows
-    displayName: NuGet
+    displayName: macOS - Build Surge
 
   - bash: |
       set -e
 
       mkdir -p build
       cmake -Bbuild -A x64
-      ls -al build
-      
-      # need this because MSBuild.restoreNugetPackages: true fails
-      nuget restore build
     condition: and(variables.isWindows, variables.x64)
-    displayName: Setup Windows 64 Project
+    displayName: win64 - Setup Project
 
   - bash: |
       set -e
 
       mkdir -p build
       cmake -Bbuild -A Win32
-      ls -al build
-      
-      # need this because MSBuild.restoreNugetPackages: true fails
-      nuget restore build
     condition: and(variables.isWindows, variables.x86)
-    displayName: Setup Windows 32 Project
+    displayName: win32 - Setup Project
 
 
   - bash: |
@@ -218,7 +206,7 @@ jobs:
 
       cmake --build build --config Release 
     condition: variables.isWindows
-    displayName: Build Windows
+    displayName: win - Build Surge
 
 #### FX Stage
 
@@ -229,8 +217,7 @@ jobs:
       cd surge-fx
       git submodule update --init --recursive
 
-    condition: variables.isMac
-    displayName: Clone FX
+    displayName: all - Clone FX
 
   - bash: |
       set -e
@@ -240,7 +227,7 @@ jobs:
       cmake --build build --config Release --target well-named-assets
 
     condition: variables.isLinux
-    displayName: Build Linux FX Plugin
+    displayName: linux - Build FX
 
   - bash: |
       set -e
@@ -250,7 +237,7 @@ jobs:
       cmake --build build --config Release --target well-named-assets
 
     condition: and(variables.isWindows, variables.x64)
-    displayName: Build Win 64 bit FX Plugin
+    displayName: win64 - Build FX
 
   - bash: |
       set -e
@@ -260,17 +247,17 @@ jobs:
       cmake --build build --config Release --target well-named-assets
 
     condition: and(variables.isWindows, variables.x86)
-    displayName: Build Win 32 bit FX Plugin
+    displayName: win32 - Build FX
 
   - bash: |
       set -e
 
       cd surge-fx
       cmake -Bbuild -GXcode
-      cmake --build build --config Release --target well-named-assets
+      cmake --build build --config Release --target well-named-assets | xcpretty
 
     condition: variables.isMac
-    displayName: Build Mac FX Plugin
+    displayName: mac - Build FX
 
 
 ### Make the installers
@@ -283,41 +270,21 @@ jobs:
       rm -f *.pkg
       popd
     condition: variables.isMac
-    displayName: Make macOS installer
+    displayName: mac - make installer
 
   - task: PublishPipelineArtifact@0
     inputs:
       artifactName: 'INSTALLER_MAC_DMG'
       targetPath: 'installer_mac/installer'
     condition: variables.isMac
-    displayName: Publish macOS DMG
-
-  - bash: |
-      set -x
-      mkdir -p installer_win/direct
-      mkdir -p installer_win/Output
-      ls -l installer_win
-      ls -l target/
-      cp target/vst2/Release/Surge.dll installer_win/direct
-      cp target/vst3/Release/Surge.vst3 installer_win/direct
-      cp fxbuild/surge-fx/Builds/VisualStudio2017/x64/Release/VST3/SurgeEffectsBank.vst3 installer_win/direct
-      cd installer_win/direct
-      ls -l
-      pwd
-      7z.exe a evil.zip Surge.dll Surge.vst3 SurgeEffectsBank.vst3
-      ls -l
-      echo mv evil.zip ../Output/Surge-Win64DLL-${SURGE_VERSION}.zip
-      mv evil.zip ../Output/Surge-Win64DLL-${SURGE_VERSION}.zip
-      ls -l ../Output
-    condition: and(variables.isWindows, variables.x64)
-    displayName: Make a dll only zip for EvilDragon
+    displayName: mac - publish DMG
 
   - bash: |
       set -e
       nuget install innosetup
       iscc installer_win/surge.iss
     condition: and(variables.isWindows, variables.x64)
-    displayName: Make Windows x64 installer
+    displayName: win64 - make installer
 
 
   - task: PublishPipelineArtifact@0
@@ -325,21 +292,21 @@ jobs:
       artifactName: 'INSTALLER_WIN_EXE'
       targetPath: 'installer_win/Output'
     condition: and(variables.isWindows, variables.x64)
-    displayName: Publish Windows x64 installer
+    displayName: win64 - publish installer
 
   - bash: |
       set -e
       nuget install innosetup
       iscc installer_win/surge-x86.iss
     condition: and(variables.isWindows, variables.x86)
-    displayName: Make Windows x86 installer
+    displayName: win32 - make installer
 
   - task: PublishPipelineArtifact@0
     inputs:
       artifactName: 'INSTALLER_WIN_X86_EXE'
       targetPath: 'installer_win/Output'
     condition: and(variables.isWindows, variables.x86)
-    displayName: Publish Windows x86 installer
+    displayName: win32 - publish installer
 
   - bash: |
       echo "SURGE_VERSION=$SURGE_VERSION"
@@ -349,14 +316,14 @@ jobs:
       sudo ./make_deb.sh "$SURGE_VERSION"
       popd
     condition: variables.isLinux
-    displayName: Make Linux deb installer
+    displayName: linux - make deb installer
 
   - task: PublishPipelineArtifact@0
     inputs:
       artifactName: 'INSTALLER_LINUX_DEB'
       targetPath: 'installer_linux/product'
     condition: variables.isLinux
-    displayName: Publish Linux deb installer
+    displayName: linux - publish deb installer
 
 
 - job: Release
