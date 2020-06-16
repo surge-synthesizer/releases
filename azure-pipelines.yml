@@ -13,12 +13,12 @@ jobs:
       set -o xtrace
 
       if [ "$SURGE_BRANCH" == "" ]; then
-        export SURGE_LOCAL_BRANCH='master'
+        export SURGE_LOCAL_BRANCH='main'
       else
         export SURGE_LOCAL_BRANCH="${SURGE_BRANCH/refs\/heads\/}"
       fi
 
-      if ! [[ $SURGE_LOCAL_BRANCH =~ ^(master|release/.+)$ ]]; then
+      if ! [[ $SURGE_LOCAL_BRANCH =~ ^(main|release/.+)$ ]]; then
         exit 1
       fi
 
@@ -30,7 +30,7 @@ jobs:
       git reset --hard $SURGE_LOCAL_BRANCH
       git submodule update --init --recursive
 
-      if [ "$SURGE_VERSION" == "master" ]; then
+      if [ "$SURGE_VERSION" == "main" ]; then
         export SURGE_VERSION="NIGHTLY-$(date +%Y-%m-%d)-$(git rev-parse --short HEAD)"
       fi
       echo "SURGE_VERSION=$SURGE_VERSION"
@@ -85,12 +85,12 @@ jobs:
       set -e
 
       if [ "$SURGE_BRANCH" == "" ]; then
-        export SURGE_LOCAL_BRANCH='master'
+        export SURGE_LOCAL_BRANCH='main'
       else
         export SURGE_LOCAL_BRANCH="${SURGE_BRANCH/refs\/heads\/}"
       fi
 
-      if ! [[ $SURGE_LOCAL_BRANCH =~ ^(master|release/.+)$ ]]; then
+      if ! [[ $SURGE_LOCAL_BRANCH =~ ^(main|release/.+)$ ]]; then
         exit 1
       fi
 
@@ -113,7 +113,7 @@ jobs:
 
       git submodule update --init --recursive
 
-      if [ "$SURGE_VERSION" == "master" ]; then
+      if [ "$SURGE_VERSION" == "main" ]; then
         export SURGE_VERSION="NIGHTLY-$(date +%Y-%m-%d)-$(git rev-parse --short HEAD)"
       fi
       echo "SURGE_VERSION=$SURGE_VERSION"
@@ -403,7 +403,7 @@ jobs:
       tar zxvf ghr.tar.gz
 
       echo "SURGE BRANCH is $SURGE_BRANCH"
-      if [ "$SURGE_BRANCH" == "master" ]; then
+      if [ "$SURGE_BRANCH" == "main" ]; then
         echo "Exporting to NIGHTLY"
         export SURGE_LOCAL_BRANCH="NIGHTLY"
         export PRE="-prerelease"
