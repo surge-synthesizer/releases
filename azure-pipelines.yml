@@ -408,7 +408,7 @@ jobs:
         export SURGE_LOCAL_BRANCH="NIGHTLY"
         export PRE="-prerelease"
       else
-        export "Exporting to new version $SURGE_VERSION"
+        echo "Exporting to new version '$SURGE_VERSION'"
         export SURGE_LOCAL_BRANCH=$SURGE_VERSION
       fi
       $GHR/ghr $PRE -b "Release $SURGE_VERSION" -recreate $SURGE_LOCAL_BRANCH releases
