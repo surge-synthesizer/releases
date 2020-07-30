@@ -239,7 +239,7 @@ jobs:
       set -e
       
       cd surge-fx
-      cmake -Bbuild
+      cmake -Bbuild -A x64
       cmake --build build --config Release --target well-named-assets
 
     condition: and(variables.isWindows, variables.x64)
