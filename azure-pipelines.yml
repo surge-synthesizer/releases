@@ -38,6 +38,12 @@ jobs:
       # set the active version
       echo $SURGE_VERSION > VERSION
 
+      # Make the git substitute file
+      ./scripts/misc/build-version-override.sh
+
+      cat VERSION
+      cat VERSION_GIT_INFO
+
       # Remove the .git directory
       find . -name ".git" -exec rm -rf {} \; || echo "I tried"
 
