@@ -216,7 +216,7 @@ jobs:
   - bash: |
       set -e
 
-      cmake --build build --config Release --target all-components
+      cmake --build build --config Release --target Surge-VST3-Packaged
     condition: variables.isWindows
     displayName: win - Build Surge
 
