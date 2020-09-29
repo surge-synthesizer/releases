@@ -341,6 +341,21 @@ jobs:
     condition: variables.isLinux
     displayName: linux - publish deb installer
 
+  # Finally make the git info
+  - bash: |
+      mkdir stage_git/git_info
+      git log -1 --pretty=format:'%h : %s - %an' > stage_git/git_info/git_nightly_log_head
+
+    condition: variables.isMac
+    displayName: Use the mac build to make git log info
+
+  - task: PublishPipelineArtifact@0
+    inputs:
+      artifactName: 'GIT_INFO'
+      targetPath: 'stage_git/'
+    condition: variables.isMac
+    displayName: Publish the Git Info
+
 
 - job: Release
   dependsOn: Build
@@ -389,6 +404,11 @@ jobs:
       artifactName: 'SOURCE_TARBALL'
       targetPath: $(System.DefaultWorkingDirectory)
 
+  - task: DownloadPipelineArtifact@0
+    inputs:
+      artifactName: 'GIT_INFO'
+      targetPath: $(System.DefaultWorkingDirectory)
+
   - bash: |
       set -e
       set -x
@@ -429,11 +449,12 @@ jobs:
       pushd surge-synthesizer.github.io
 
       if [ "$SURGE_BRANCH" == "NIGHTLY" ]; then
-        echo $(date +%Y-%m-%d) > _includes/latest_build_time
+        echo $(date "+%Y-%m-%d %H:%M:%S %Z") > _includes/latest_build_time
         echo https://github.com/surge-synthesizer/releases/releases/download/$SURGE_BRANCH/Surge-$SURGE_VERSION-Setup.dmg > _includes/latest_macos_url
         echo https://github.com/surge-synthesizer/releases/releases/download/$SURGE_BRANCH/Surge-$SURGE_VERSION-Setup.exe > _includes/latest_win_x64_url
         echo https://github.com/surge-synthesizer/releases/releases/download/$SURGE_BRANCH/Surge-$SURGE_VERSION-Setup-x86.exe > _includes/latest_win_x86_url
         echo https://github.com/surge-synthesizer/releases/releases/download/$SURGE_BRANCH/Surge-linux-x64-$SURGE_VERSION.deb > _includes/latest_linux_x64_url
+        cp ../git_info/* _includes
       else
         echo $(date +%Y-%m-%d) > _includes/stable_build_time
         echo $SURGE_BRANCH > _includes/stable_build_version
