@@ -180,7 +180,7 @@ jobs:
       set -e
       cmake -Bbuild -D AZURE_PIPELINE=1
 
-      cmake --build build --config Release --target all-components
+      cmake --build build --config Release --target pipeline-components
 
     condition: variables.isLinux
     displayName: linux - Build Surge
@@ -191,7 +191,7 @@ jobs:
       set -e
       cmake -Bbuild -GXcode -D AZURE_PIPELINE=1
 
-      cmake --build build --config Release --target all-components | xcpretty
+      cmake --build build --config Release --target pipeline-components | xcpretty
 
     condition: variables.isMac
     displayName: macOS - Build Surge
@@ -469,10 +469,11 @@ jobs:
       git add _includes
       git commit -m "Update releases for $SURGE_VERSION"
       git push
+      export GIT_LOG_DISP=`cat _includes/git_nightly_log_display`
       popd
 
       # . $AGENT_TEMPDIRECTORY/update-website.sh $SURGE_LOCAL_BRANCH $SURGE_VERSION
 
       # Finally tell discord
-      curl -i -H "Accept: application/json" -H "Content-Type:application/json" -X POST --data "{\"content\": \"A New Nightly is Up at https://surge-synthesizer.github.io/nightly - ${SURGE_VERSION}. Enjoy.\"}" `cat $AGENT_TEMPDIRECTORY/discord-nightly.webhook`
+      curl -i -H "Accept: application/json" -H "Content-Type:application/json" -X POST --data "{\"content\": \"A New Nightly is Up at https://surge-synthesizer.github.io/nightly - ${SURGE_VERSION}. The new commit is: ${GIT_LOG_DISP}.\"}" `cat $AGENT_TEMPDIRECTORY/discord-nightly.webhook`
     displayName: Perform Release
