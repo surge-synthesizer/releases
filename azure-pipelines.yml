@@ -344,8 +344,8 @@ jobs:
   # Finally make the git info
   - bash: |
       mkdir -p stage_git/git_info
-      git log -1 --pretty=format:'%h : %s - %an' > stage_git/git_info/git_nightly_log_head
-
+      git log -1 --pretty=format:'%h : %s - %an' > stage_git/git_info/git_nightly_log_display
+      git log -1 --pretty=format:'%h' > stage_git/git_info/git_nightly_log_hash
     condition: variables.isMac
     displayName: Use the mac build to make git log info
 
@@ -454,7 +454,6 @@ jobs:
         echo https://github.com/surge-synthesizer/releases/releases/download/$SURGE_BRANCH/Surge-$SURGE_VERSION-Setup.exe > _includes/latest_win_x64_url
         echo https://github.com/surge-synthesizer/releases/releases/download/$SURGE_BRANCH/Surge-$SURGE_VERSION-Setup-x86.exe > _includes/latest_win_x86_url
         echo https://github.com/surge-synthesizer/releases/releases/download/$SURGE_BRANCH/Surge-linux-x64-$SURGE_VERSION.deb > _includes/latest_linux_x64_url
-        cp ../git_info/* _includes
       else
         echo $(date +%Y-%m-%d) > _includes/stable_build_time
         echo $SURGE_BRANCH > _includes/stable_build_version
@@ -462,6 +461,7 @@ jobs:
         echo https://github.com/surge-synthesizer/releases/releases/download/$SURGE_BRANCH/Surge-$SURGE_VERSION-Setup.exe > _includes/stable_win_x64_url
         echo https://github.com/surge-synthesizer/releases/releases/download/$SURGE_BRANCH/Surge-$SURGE_VERSION-Setup-x86.exe > _includes/stable_win_x86_url
         echo https://github.com/surge-synthesizer/releases/releases/download/$SURGE_BRANCH/Surge-linux-x64-$SURGE_VERSION.deb > _includes/stable_linux_x64_url
+        cp ../git_info/* _includes
       fi
 
       git add _includes
