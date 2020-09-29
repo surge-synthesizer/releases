@@ -343,7 +343,7 @@ jobs:
 
   # Finally make the git info
   - bash: |
-      mkdir stage_git/git_info
+      mkdir -p stage_git/git_info
       git log -1 --pretty=format:'%h : %s - %an' > stage_git/git_info/git_nightly_log_head
 
     condition: variables.isMac
