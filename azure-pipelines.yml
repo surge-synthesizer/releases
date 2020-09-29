@@ -362,7 +362,7 @@ jobs:
 
   - task: DownloadSecureFile@1
     inputs:
-      secureFile: update-website.sh
+      secureFile: checkout-website.sh
 
   - task: DownloadPipelineArtifact@0
     inputs:
@@ -423,7 +423,32 @@ jobs:
       fi
       $GHR/ghr $PRE -b "Release $SURGE_VERSION" -recreate $SURGE_LOCAL_BRANCH releases
 
-      . $AGENT_TEMPDIRECTORY/update-website.sh $SURGE_LOCAL_BRANCH $SURGE_VERSION
+      # Move the website generation here
+      . $AGENT_TEMPDIRECTORY/checkout-website.sh
+
+      pushd surge-synthesizer.github.io
+
+      if [ "$SURGE_BRANCH" == "NIGHTLY" ]; then
+        echo $(date +%Y-%m-%d) > _includes/latest_build_time
+        echo https://github.com/surge-synthesizer/releases/releases/download/$SURGE_BRANCH/Surge-$SURGE_VERSION-Setup.dmg > _includes/latest_macos_url
+        echo https://github.com/surge-synthesizer/releases/releases/download/$SURGE_BRANCH/Surge-$SURGE_VERSION-Setup.exe > _includes/latest_win_x64_url
+        echo https://github.com/surge-synthesizer/releases/releases/download/$SURGE_BRANCH/Surge-$SURGE_VERSION-Setup-x86.exe > _includes/latest_win_x86_url
+        echo https://github.com/surge-synthesizer/releases/releases/download/$SURGE_BRANCH/Surge-linux-x64-$SURGE_VERSION.deb > _includes/latest_linux_x64_url
+      else
+        echo $(date +%Y-%m-%d) > _includes/stable_build_time
+        echo $SURGE_BRANCH > _includes/stable_build_version
+        echo https://github.com/surge-synthesizer/releases/releases/download/$SURGE_BRANCH/Surge-$SURGE_VERSION-Setup.dmg > _includes/stable_macos_url
+        echo https://github.com/surge-synthesizer/releases/releases/download/$SURGE_BRANCH/Surge-$SURGE_VERSION-Setup.exe > _includes/stable_win_x64_url
+        echo https://github.com/surge-synthesizer/releases/releases/download/$SURGE_BRANCH/Surge-$SURGE_VERSION-Setup-x86.exe > _includes/stable_win_x86_url
+        echo https://github.com/surge-synthesizer/releases/releases/download/$SURGE_BRANCH/Surge-linux-x64-$SURGE_VERSION.deb > _includes/stable_linux_x64_url
+      fi
+
+      git add _includes
+      git commit -m "Update releases for $SURGE_VERSION"
+      git push
+      popd
+
+      # . $AGENT_TEMPDIRECTORY/update-website.sh $SURGE_LOCAL_BRANCH $SURGE_VERSION
 
       # Finally tell discord
       curl -i -H "Accept: application/json" -H "Content-Type:application/json" -X POST --data "{\"content\": \"A New Nightly is Up at https://surge-synthesizer.github.io/nightly - ${SURGE_VERSION}. Enjoy.\"}" `cat $AGENT_TEMPDIRECTORY/discord-nightly.webhook`
