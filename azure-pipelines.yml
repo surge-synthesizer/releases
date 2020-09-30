@@ -441,9 +441,8 @@ jobs:
         echo "Exporting to new version '$SURGE_VERSION'"
         export SURGE_LOCAL_BRANCH=$SURGE_VERSION
       fi
-      $GHR/ghr $PRE -b "Release $SURGE_VERSION" -recreate $SURGE_LOCAL_BRANCH releases
 
-      # Move the website generation here
+      # Move the website generation here before the release to avoid web rebuild latency being quite as bad
       . $AGENT_TEMPDIRECTORY/checkout-website.sh
 
       pushd surge-synthesizer.github.io
@@ -472,8 +471,9 @@ jobs:
       export GIT_LOG_DISP=`cat _includes/git_nightly_log_display`
       popd
 
-      # . $AGENT_TEMPDIRECTORY/update-website.sh $SURGE_LOCAL_BRANCH $SURGE_VERSION
+      # And now do the upload
+      $GHR/ghr $PRE -b "Release $SURGE_VERSION" -recreate $SURGE_LOCAL_BRANCH releases
 
       # Finally tell discord
-      curl -i -H "Accept: application/json" -H "Content-Type:application/json" -X POST --data "{\"content\": \"A New Nightly is Up at https://surge-synthesizer.github.io/nightly - ${SURGE_VERSION}. The new commit is: ${GIT_LOG_DISP}.\"}" `cat $AGENT_TEMPDIRECTORY/discord-nightly.webhook`
+      curl -i -H "Accept: application/json" -H "Content-Type:application/json" -X POST --data "{\"content\": \"A New Nightly is Ready\n*${SURGE_VERSION}*\n\`${GIT_LOG_DISP}\`\nhttps://surge-synthesizer.github.io/nightly\"}" `cat $AGENT_TEMPDIRECTORY/discord-nightly.webhook`
     displayName: Perform Release
