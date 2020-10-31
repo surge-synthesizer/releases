@@ -30,6 +30,10 @@ jobs:
       git reset --hard $SURGE_LOCAL_BRANCH
       git submodule update --init --recursive
 
+      # Generate the skin tutorial 
+      perl scripts/misc/skinTutorialsToMarkdown.pl 
+
+
       if [ "$SURGE_VERSION" == "main" ]; then
         export SURGE_VERSION="NIGHTLY-$(date +%Y-%m-%d)-$(git rev-parse --short HEAD)"
       fi
@@ -49,6 +53,7 @@ jobs:
 
       cd ..
       mkdir srctar
+      mv surge/skintmp.md srctar/skin_autodoc.md
       tar -cvzf srctar/SurgeSrc_${SURGE_VERSION}.tgz surge
     displayName: Get source for Tarball
     
@@ -423,6 +428,10 @@ jobs:
       mv *.deb releases
       mv *.tgz releases
 
+      mkdir -p website_includes
+      mv *.md website_includes
+      ls -l website_includes
+
       openssl dgst -sha256 releases/* > release_sha256.txt
       mv release_sha256.txt releases
 
@@ -446,6 +455,7 @@ jobs:
       . $AGENT_TEMPDIRECTORY/checkout-website.sh
 
       pushd surge-synthesizer.github.io
+      mv ../website_includes/*md _includes
 
       if [ "$SURGE_LOCAL_BRANCH" == "NIGHTLY" ]; then
         echo $(date "+%Y-%m-%d %H:%M:%S %Z") > _includes/latest_build_time
