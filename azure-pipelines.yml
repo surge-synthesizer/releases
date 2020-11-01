@@ -350,6 +350,8 @@ jobs:
   - bash: |
       mkdir -p stage_git/git_info
       git log -1 --pretty=format:'%h : %s - %an' > stage_git/git_info/git_nightly_log_display
+      git log -1 --pretty=format:'%h : %s%n%aD%n%an%n%n%B' > stage_git/git_info/git_nightly_log_long_display
+      git log -5 --pretty=format:'%h : %s - %an' > stage_git/git_info/git_nightly_recent_five
       git log -1 --pretty=format:'%h' > stage_git/git_info/git_nightly_log_hash
     condition: variables.isMac
     displayName: Use the mac build to make git log info
@@ -463,6 +465,7 @@ jobs:
         echo https://github.com/surge-synthesizer/releases/releases/download/$SURGE_LOCAL_BRANCH/Surge-$SURGE_VERSION-Setup.exe > _includes/latest_win_x64_url
         echo https://github.com/surge-synthesizer/releases/releases/download/$SURGE_LOCAL_BRANCH/Surge-$SURGE_VERSION-Setup-x86.exe > _includes/latest_win_x86_url
         echo https://github.com/surge-synthesizer/releases/releases/download/$SURGE_LOCAL_BRANCH/Surge-linux-x64-$SURGE_VERSION.deb > _includes/latest_linux_x64_url
+        echo $SURGE_VERSION > _includes/latest_version
         cp ../git_info/* _includes
       else
         echo $(date "+%Y-%m-%d") > _includes/stable_build_time
