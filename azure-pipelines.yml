@@ -113,7 +113,7 @@ jobs:
       echo "SURGE_VERSION=$SURGE_VERSION"
 
       # get the surge code
-      git clone --depth 1 --branch $SURGE_LOCAL_BRANCH https://github.com/surge-synthesizer/surge.git 
+      git clone --depth 5 --branch $SURGE_LOCAL_BRANCH https://github.com/surge-synthesizer/surge.git 
       mv -f surge/* .
       mv -f surge/.git .
       rm -rf surge
