@@ -325,7 +325,7 @@ jobs:
       cp -R surge-fx/build/product/SurgeEffectsBank.vst3 ${ZD}/SurgeSynthTeam || echo "NoSEB"
       mkdir -p ${ZD}/SurgeSynthTeam/SurgeUserData
       mkdir -p ${ZD}/SurgeSynthTeam/SurgeData
-      cp -R resources/data/ ${ZD}/SurgeSynthTeam/SurgeData
+      cp -R resources/data ${ZD}/SurgeSynthTeam/SurgeData
 
       echo "This contains a portable Surge install of version ${SURGE_VERSION}, as described in the manual" > ${ZD}/README.txt
 
