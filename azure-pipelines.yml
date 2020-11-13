@@ -72,18 +72,18 @@ jobs:
       mac:
         imageName: 'macos-10.14'
         isMac: true
-     macOS-fat:
+      macfat:
         imageName: 'macos-10.15'
         isMacFat: True
-     windows:
+      windows:
         imageName: 'vs2017-win2016'
         isWindows: true
         x64: true
-     windows-x86:
+      windows-x86:
         imageName: 'vs2017-win2016'
         isWindows: true
         x86: true
-     linux:
+      linux:
         imageName: 'ubuntu-18.04'
         isLinux: true
 
