@@ -72,15 +72,18 @@ jobs:
       mac:
         imageName: 'macos-10.14'
         isMac: true
-      windows:
+     macOS-fat:
+        imageName: 'macos-10.15'
+        isMacFat: True
+     windows:
         imageName: 'vs2017-win2016'
         isWindows: true
         x64: true
-      windows-x86:
+     windows-x86:
         imageName: 'vs2017-win2016'
         isWindows: true
         x86: true
-      linux:
+     linux:
         imageName: 'ubuntu-18.04'
         isLinux: true
 
@@ -201,6 +204,22 @@ jobs:
     condition: variables.isMac
     displayName: macOS - Build Surge
 
+ - bash: |
+      set -e
+
+      set -e
+      xcode-select -s /Applications/Xcode_12.2.app
+      
+      cmake -Bbuild -GXcode -D AZURE_PIPELINE=1  -D"CMAKE_OSX_ARCHITECTURES=arm64;x86_64"
+
+      cmake --build build --config Release --target pipeline-components | xcpretty
+
+      echo "Running LIPO for quick check"
+      lipo -archs build/surge_products/Surge.component/Contents/MacOS/Surge
+
+    condition: variables.isMacFat
+    displayName: macOS fat - Build Surge
+
   - bash: |
       set -e
 
@@ -295,6 +314,24 @@ jobs:
       targetPath: 'installer_mac/installer'
     condition: variables.isMac
     displayName: mac - publish DMG
+
+  - bash: |
+      set -e
+      echo "SURGE_VERSION=$SURGE_VERSION"
+      pushd installer_mac
+      ./make_installer.sh ${SURGE_VERSION}-fat --dmg
+      rm -f *.pkg
+      popd
+    condition: variables.isMacFat
+    displayName: mac - make installer
+
+  - task: PublishPipelineArtifact@0
+    inputs:
+      artifactName: 'INSTALLER_MAC_FAT_DMG'
+      targetPath: 'installer_mac/installer'
+    condition: variables.isMacFat
+    displayName: mac fat - publish DMG
+
 
   - task: NuGetToolInstaller@0
     condition: variables.isWindows
@@ -429,6 +466,11 @@ jobs:
 
   - task: DownloadPipelineArtifact@0
     inputs:
+      artifactName: 'INSTALLER_MAC_FAT_DMG'
+      targetPath: $(System.DefaultWorkingDirectory)
+
+  - task: DownloadPipelineArtifact@0
+    inputs:
       artifactName: 'INSTALLER_WIN_EXE'
       targetPath: $(System.DefaultWorkingDirectory)
 
@@ -504,6 +546,7 @@ jobs:
       if [ "$SURGE_LOCAL_BRANCH" == "NIGHTLY" ]; then
         echo $(date "+%Y-%m-%d %H:%M:%S %Z") > _includes/latest_build_time
         echo https://github.com/surge-synthesizer/releases/releases/download/$SURGE_LOCAL_BRANCH/Surge-$SURGE_VERSION-Setup.dmg > _includes/latest_macos_url
+        echo https://github.com/surge-synthesizer/releases/releases/download/$SURGE_LOCAL_BRANCH/Surge-$SURGE_VERSION-fat-Setup.dmg > _includes/latest_macos_fat_url
         echo https://github.com/surge-synthesizer/releases/releases/download/$SURGE_LOCAL_BRANCH/Surge-$SURGE_VERSION-Setup.exe > _includes/latest_win_x64_url
         echo https://github.com/surge-synthesizer/releases/releases/download/$SURGE_LOCAL_BRANCH/Surge-$SURGE_VERSION-win64.zip > _includes/latest_win_x64_zip_url
         echo https://github.com/surge-synthesizer/releases/releases/download/$SURGE_LOCAL_BRANCH/Surge-$SURGE_VERSION-Setup-x86.exe > _includes/latest_win_x86_url
