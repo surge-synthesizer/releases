@@ -207,8 +207,7 @@ jobs:
   - bash: |
       set -e
 
-      set -e
-      xcode-select -s /Applications/Xcode_12.2.app
+      sudo xcode-select -s /Applications/Xcode_12.2.app
       
       cmake -Bbuild -GXcode -D AZURE_PIPELINE=1  -D"CMAKE_OSX_ARCHITECTURES=arm64;x86_64"
 
