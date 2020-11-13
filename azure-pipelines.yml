@@ -204,7 +204,7 @@ jobs:
     condition: variables.isMac
     displayName: macOS - Build Surge
 
- - bash: |
+  - bash: |
       set -e
 
       set -e
