@@ -318,7 +318,8 @@ jobs:
       set -e
       echo "SURGE_VERSION=$SURGE_VERSION"
       pushd installer_mac
-      ./make_installer.sh ${SURGE_VERSION}-fat --dmg
+      ./make_installer.sh ${SURGE_VERSION} --dmg
+      mv installer/Surge-${SURGE_VERSION}-Setup.dmg installer/Surge-${SURGE_VERSION}-fat-Setup.dmg
       rm -f *.pkg
       popd
     condition: variables.isMacFat
