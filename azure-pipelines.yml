@@ -70,11 +70,8 @@ jobs:
   strategy:
     matrix:
       mac:
-        imageName: 'macos-10.14'
-        isMac: true
-      macfat:
         imageName: 'macos-10.15'
-        isMacFat: True
+        isMac: true
       windows:
         imageName: 'vs2017-win2016'
         isWindows: true
@@ -186,7 +183,7 @@ jobs:
 
   - bash: |
       set -e
-      cmake -Bbuild -D AZURE_PIPELINE=1
+      cmake -Bbuild -D AZURE_PIPELINE=1 -DBUILD_SURGE_JUCE_PLUGINS=TRUE
 
       cmake --build build --config Release --target pipeline-components
 
@@ -195,11 +192,15 @@ jobs:
 
   - bash: |
       set -e
+      sudo xcode-select -s /Applications/Xcode_12.2.app
 
-      set -e
-      cmake -Bbuild -GXcode -D AZURE_PIPELINE=1
+      cmake -Bbuild -GXcode -D AZURE_PIPELINE=1 -DBUILD_SURGE_JUCE_PLUGINS=TRUE -D"CMAKE_OSX_ARCHITECTURES=arm64;x86_64"
 
       cmake --build build --config Release --target pipeline-components | xcpretty
+
+      echo "Lipo Check"
+      lipo -archs build/surge_products/Surge.component/Contents/MacOS/Surge
+      lipo -archs build/surge_products/SurgeEffectsBank.vst3/Contents/MacOS/SurgeEffectsBank
 
     condition: variables.isMac
     displayName: macOS - Build Surge
@@ -207,23 +208,8 @@ jobs:
   - bash: |
       set -e
 
-      sudo xcode-select -s /Applications/Xcode_12.2.app
-      
-      cmake -Bbuild -GXcode -D AZURE_PIPELINE=1  -D"CMAKE_OSX_ARCHITECTURES=arm64;x86_64"
-
-      cmake --build build --config Release --target pipeline-components | xcpretty
-
-      echo "Running LIPO for quick check"
-      lipo -archs build/surge_products/Surge.component/Contents/MacOS/Surge
-
-    condition: variables.isMacFat
-    displayName: macOS fat - Build Surge
-
-  - bash: |
-      set -e
-
       mkdir -p build
-      cmake -Bbuild -A x64 -D AZURE_PIPELINE=1
+      cmake -Bbuild -A x64 -D AZURE_PIPELINE=1 -DBUILD_SURGE_JUCE_PLUGINS=TRUE
     condition: and(variables.isWindows, variables.x64)
     displayName: win64 - Setup Project
 
@@ -231,7 +217,7 @@ jobs:
       set -e
 
       mkdir -p build
-      cmake -Bbuild -A Win32 -D AZURE_PIPELINE=1
+      cmake -Bbuild -A Win32 -D AZURE_PIPELINE=1 -DBUILD_SURGE_JUCE_PLUGINS=TRUE
     condition: and(variables.isWindows, variables.x86)
     displayName: win32 - Setup Project
 
@@ -239,60 +225,13 @@ jobs:
   - bash: |
       set -e
 
-      cmake --build build --config Release --target Surge-VST3-Packaged
+      cmake --build build --config Release --target pipeline-components
     condition: variables.isWindows
     displayName: win - Build Surge
 
-#### FX Stage
-
   - bash: |
-      set -e
-
-      git clone https://github.com/surge-synthesizer/surge-fx.git
-      cd surge-fx
-      git submodule update --init --recursive
-
-    displayName: all - Clone FX
-
-  - bash: |
-      set -e
-
-      cd surge-fx
-      cmake -Bbuild
-      cmake --build build --config Release --target well-named-assets
-
-    condition: variables.isLinux
-    displayName: linux - Build FX
-
-  - bash: |
-      set -e
-      
-      cd surge-fx
-      cmake -Bbuild -A x64
-      cmake --build build --config Release --target well-named-assets
-
-    condition: and(variables.isWindows, variables.x64)
-    displayName: win64 - Build FX
-
-  - bash: |
-      set -e
-
-      cd surge-fx
-      cmake -Bbuild -A Win32
-      cmake --build build --config Release --target well-named-assets
-
-    condition: and(variables.isWindows, variables.x86)
-    displayName: win32 - Build FX
-
-  - bash: |
-      set -e
-
-      cd surge-fx
-      cmake -Bbuild -GXcode
-      cmake --build build --config Release --target well-named-assets | xcpretty
-
-    condition: variables.isMac
-    displayName: mac - Build FX
+      ls -l build/surge_products/
+    displayName: all - Whats in Surge Products then?
 
 
 ### Make the installers
@@ -313,24 +252,6 @@ jobs:
       targetPath: 'installer_mac/installer'
     condition: variables.isMac
     displayName: mac - publish DMG
-
-  - bash: |
-      set -e
-      echo "SURGE_VERSION=$SURGE_VERSION"
-      pushd installer_mac
-      ./make_installer.sh ${SURGE_VERSION} --dmg
-      mv installer/Surge-${SURGE_VERSION}-Setup.dmg installer/Surge-${SURGE_VERSION}-fat-Setup.dmg
-      rm -f *.pkg
-      popd
-    condition: variables.isMacFat
-    displayName: mac - make installer
-
-  - task: PublishPipelineArtifact@0
-    inputs:
-      artifactName: 'INSTALLER_MAC_FAT_DMG'
-      targetPath: 'installer_mac/installer'
-    condition: variables.isMacFat
-    displayName: mac fat - publish DMG
 
 
   - task: NuGetToolInstaller@0
@@ -466,11 +387,6 @@ jobs:
 
   - task: DownloadPipelineArtifact@0
     inputs:
-      artifactName: 'INSTALLER_MAC_FAT_DMG'
-      targetPath: $(System.DefaultWorkingDirectory)
-
-  - task: DownloadPipelineArtifact@0
-    inputs:
       artifactName: 'INSTALLER_WIN_EXE'
       targetPath: $(System.DefaultWorkingDirectory)
 
@@ -546,7 +462,6 @@ jobs:
       if [ "$SURGE_LOCAL_BRANCH" == "NIGHTLY" ]; then
         echo $(date "+%Y-%m-%d %H:%M:%S %Z") > _includes/latest_build_time
         echo https://github.com/surge-synthesizer/releases/releases/download/$SURGE_LOCAL_BRANCH/Surge-$SURGE_VERSION-Setup.dmg > _includes/latest_macos_url
-        echo https://github.com/surge-synthesizer/releases/releases/download/$SURGE_LOCAL_BRANCH/Surge-$SURGE_VERSION-fat-Setup.dmg > _includes/latest_macos_fat_url
         echo https://github.com/surge-synthesizer/releases/releases/download/$SURGE_LOCAL_BRANCH/Surge-$SURGE_VERSION-Setup.exe > _includes/latest_win_x64_url
         echo https://github.com/surge-synthesizer/releases/releases/download/$SURGE_LOCAL_BRANCH/Surge-$SURGE_VERSION-win64.zip > _includes/latest_win_x64_zip_url
         echo https://github.com/surge-synthesizer/releases/releases/download/$SURGE_LOCAL_BRANCH/Surge-$SURGE_VERSION-Setup-x86.exe > _includes/latest_win_x86_url
