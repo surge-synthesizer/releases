@@ -372,7 +372,11 @@ jobs:
 - job: Release
   dependsOn: Build
   condition: succeeded()
-  imageName: 'macos-10.15'
+  strategy:
+    matrix:
+      release-on-mac:
+        imageName: 'macos-10.15'
+
   variables:
     SURGE_VERSION: $[ dependencies.Build.outputs['mac.surge.SURGE_VERSION'] ]
     SURGE_BRANCH: $[ dependencies.Build.outputs['mac.surge.SURGE_LOCAL_BRANCH'] ]
