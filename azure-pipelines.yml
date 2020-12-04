@@ -372,6 +372,7 @@ jobs:
 - job: Release
   dependsOn: Build
   condition: succeeded()
+  imageName: 'macos-10.15'
   variables:
     SURGE_VERSION: $[ dependencies.Build.outputs['mac.surge.SURGE_VERSION'] ]
     SURGE_BRANCH: $[ dependencies.Build.outputs['mac.surge.SURGE_LOCAL_BRANCH'] ]
@@ -465,7 +466,7 @@ jobs:
       fi
 
       # Move the website generation here before the release to avoid web rebuild latency being quite as bad
-      . $AGENT_TEMPDIRECTORY/checkout-website.sh
+      . $AGENT_TEMPDIRECTORY/checkout-website.sh 
 
       pushd surge-synthesizer.github.io
       mv ../website_includes/*md _includes
