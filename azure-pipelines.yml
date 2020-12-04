@@ -28,7 +28,12 @@ jobs:
       git clone --depth 1 --branch $SURGE_LOCAL_BRANCH https://github.com/surge-synthesizer/surge.git 
       cd surge
       git reset --hard $SURGE_LOCAL_BRANCH
-      git submodule update --init --recursive
+
+      . ./scripts/misc/defensive-submodule.sh
+      . ./scripts/misc/defensive-submodule.sh
+      . ./scripts/misc/defensive-submodule.sh
+
+      rm -rf libs/juce*
 
       # Generate the skin tutorial 
       perl scripts/misc/skinTutorialsToMarkdown.pl 
@@ -122,7 +127,9 @@ jobs:
       ls -al libs
       git status
 
-      git submodule update --init --recursive
+      . ./scripts/misc/defensive-submodule.sh
+      . ./scripts/misc/defensive-submodule.sh
+      . ./scripts/misc/defensive-submodule.sh
 
       if [ "$SURGE_VERSION" == "main" ]; then
         export SURGE_VERSION="NIGHTLY-$(date +%Y-%m-%d)-$(git rev-parse --short HEAD)"
