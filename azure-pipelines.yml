@@ -292,7 +292,6 @@ jobs:
       mkdir -p ${ZD}/SurgeSynthTeam
       cp build/surge_products/Surge.vst3 ${ZD}/SurgeSynthTeam || echo "NoVST3"
       cp -R surge-fx/build/product/SurgeEffectsBank.vst3 ${ZD}/SurgeSynthTeam || echo "NoSEB"
-      mkdir -p ${ZD}/SurgeSynthTeam/SurgeUserData
       mkdir -p ${ZD}/SurgeSynthTeam/SurgeData
       cp -R resources/data/* ${ZD}/SurgeSynthTeam/SurgeData
 
