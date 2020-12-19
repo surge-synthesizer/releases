@@ -343,7 +343,7 @@ jobs:
       echo "This contains a portable x86 Surge install of version ${SURGE_VERSION}, as described in the manual" > ${ZD}/README.txt
 
       pushd ziptmp
-      7z a Surge-${SURGE_VERSION}-win-x86.zip SurgeZip-${SURGE_VERSION}\\
+      7z a Surge-${SURGE_VERSION}-win-x86.zip SurgeZip-x86-${SURGE_VERSION}\\
       popd
 
       mkdir zipfinal
