@@ -331,6 +331,36 @@ jobs:
     displayName: win32 - publish installer
 
   - bash: |
+      set -e
+      export ZD=ziptmp/SurgeZip-x86-${SURGE_VERSION}
+      mkdir -p ${ZD}
+      mkdir -p ${ZD}/SurgeSynthTeam
+      cp build/surge_products/Surge_x86.vst3 ${ZD}/SurgeSynthTeam || echo "NoVST3"
+      cp -R surge-fx/build/product/SurgeEffectsBank.vst3 ${ZD}/SurgeSynthTeam || echo "NoSEB"
+      mkdir -p ${ZD}/SurgeSynthTeam/SurgeData
+      cp -R resources/data/* ${ZD}/SurgeSynthTeam/SurgeData
+
+      echo "This contains a portable x86 Surge install of version ${SURGE_VERSION}, as described in the manual" > ${ZD}/README.txt
+
+      pushd ziptmp
+      7z a Surge-${SURGE_VERSION}-win-x86.zip SurgeZip-${SURGE_VERSION}\\
+      popd
+
+      mkdir zipfinal
+      mv ziptmp/*.zip zipfinal
+
+      ls -l zipfinal
+    condition: and(variables.isWindows, variables.x86)
+    displayName: win32 - make zip version
+
+  - task: PublishPipelineArtifact@0
+    inputs:
+      artifactName: 'INSTALLER_WIN_X86_ZIP'
+      targetPath: 'zipfinal'
+    condition: and(variables.isWindows, variables.x86)
+    displayName: win32 - publish windows zip
+
+  - bash: |
       echo "SURGE_VERSION=$SURGE_VERSION"
       pushd installer_linux
       echo "sudo makedeb so we get root file perms, since --root-owner-group doesn't work on ubuntu 16.04"
@@ -417,6 +447,12 @@ jobs:
 
   - task: DownloadPipelineArtifact@0
     inputs:
+      artifactName: 'INSTALLER_WIN_X86_ZIP'
+      targetPath: $(System.DefaultWorkingDirectory)
+
+
+  - task: DownloadPipelineArtifact@0
+    inputs:
       artifactName: 'INSTALLER_LINUX_DEB'
       targetPath: $(System.DefaultWorkingDirectory)
 
@@ -480,6 +516,7 @@ jobs:
         echo https://github.com/surge-synthesizer/releases/releases/download/$SURGE_LOCAL_BRANCH/Surge-$SURGE_VERSION-Setup.exe > _includes/latest_win_x64_url
         echo https://github.com/surge-synthesizer/releases/releases/download/$SURGE_LOCAL_BRANCH/Surge-$SURGE_VERSION-win64.zip > _includes/latest_win_x64_zip_url
         echo https://github.com/surge-synthesizer/releases/releases/download/$SURGE_LOCAL_BRANCH/Surge-$SURGE_VERSION-Setup-x86.exe > _includes/latest_win_x86_url
+        echo https://github.com/surge-synthesizer/releases/releases/download/$SURGE_LOCAL_BRANCH/Surge-$SURGE_VERSION-x86.zip > _includes/latest_win_x86_zip_url
         echo https://github.com/surge-synthesizer/releases/releases/download/$SURGE_LOCAL_BRANCH/Surge-linux-x64-$SURGE_VERSION.deb > _includes/latest_linux_x64_url
         echo $SURGE_VERSION > _includes/latest_version
         cp ../git_info/* _includes
@@ -490,6 +527,7 @@ jobs:
         echo https://github.com/surge-synthesizer/releases/releases/download/$SURGE_LOCAL_BRANCH/Surge-$SURGE_VERSION-Setup.exe > _includes/stable_win_x64_url
         echo https://github.com/surge-synthesizer/releases/releases/download/$SURGE_LOCAL_BRANCH/Surge-$SURGE_VERSION-win64.zip > _includes/stable_win_x64_zip_url
         echo https://github.com/surge-synthesizer/releases/releases/download/$SURGE_LOCAL_BRANCH/Surge-$SURGE_VERSION-Setup-x86.exe > _includes/stable_win_x86_url
+        echo https://github.com/surge-synthesizer/releases/releases/download/$SURGE_LOCAL_BRANCH/Surge-$SURGE_VERSION-x86.zip > _includes/stable_win_x86_zip_url
         echo https://github.com/surge-synthesizer/releases/releases/download/$SURGE_LOCAL_BRANCH/Surge-linux-x64-$SURGE_VERSION.deb > _includes/stable_linux_x64_url
         cp ../git_info/* _includes
       fi
