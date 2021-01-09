@@ -247,6 +247,51 @@ jobs:
 
 ### Make the installers
 
+# first windows skinny
+
+  - task: NuGetToolInstaller@0
+    condition: variables.isWindows
+    displayName: win - Install NuGet for ISCC
+    
+  - bash: |
+      set -e
+      nuget install innosetup
+      iscc installer_win/surge.iss
+      mv installer_win/output/Surge-${SURGE_VERSION}-Setup.exe installer_win/output/Surge-${SURGE_VERSION}-no-extra-Setup.exe
+    condition: and(variables.isWindows, variables.x64)
+    displayName: win64 - make no-extra installer
+
+  - bash: |
+      set -e
+      nuget install innosetup
+      iscc installer_win/surge-x86.iss
+      mv installer_win/output/Surge-${SURGE_VERSION}-Setup-x86.exe installer_win/output/Surge-${SURGE_VERSION}-no-extra-Setup-x86.exe
+    condition: and(variables.isWindows, variables.x86)
+    displayName: win32 - make no-extra installer
+
+# Then stage the extra assets
+  - bash: |
+      cmake --build build --target download-extra-content
+      cmake --build build --target stage-extra-content
+    displayName: all - grab extra content
+
+# Then the fat builds
+
+  - bash: |
+      set -e
+      nuget install innosetup
+      iscc installer_win/surge.iss
+    condition: and(variables.isWindows, variables.x64)
+    displayName: win64 - make full installer
+
+  - bash: |
+      set -e
+      nuget install innosetup
+      iscc installer_win/surge-x86.iss
+    condition: and(variables.isWindows, variables.x86)
+    displayName: win32 - make full installer
+
+
   - bash: |
       set -e
       echo "SURGE_VERSION=$SURGE_VERSION"
@@ -263,19 +308,6 @@ jobs:
       targetPath: 'installer_mac/installer'
     condition: variables.isMac
     displayName: mac - publish DMG
-
-
-  - task: NuGetToolInstaller@0
-    condition: variables.isWindows
-    displayName: win - Install NuGet for ISCC
-    
-  - bash: |
-      set -e
-      nuget install innosetup
-      iscc installer_win/surge.iss
-    condition: and(variables.isWindows, variables.x64)
-    displayName: win64 - make installer
-
 
 
   - task: PublishPipelineArtifact@0
@@ -314,14 +346,6 @@ jobs:
       targetPath: 'zipfinal'
     condition: and(variables.isWindows, variables.x64)
     displayName: win64 - publish windows zip
-
-
-  - bash: |
-      set -e
-      nuget install innosetup
-      iscc installer_win/surge-x86.iss
-    condition: and(variables.isWindows, variables.x86)
-    displayName: win32 - make installer
 
   - task: PublishPipelineArtifact@0
     inputs:
