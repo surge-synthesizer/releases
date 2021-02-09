@@ -79,17 +79,41 @@ jobs:
       mac:
         imageName: 'macos-10.15'
         isMac: true
+        isClassic: true
+        cmakeTarget: pipeline-components
       windows:
         imageName: 'vs2017-win2016'
         isWindows: true
+        isClassic: true
+        cmakeTarget: pipeline-components
         x64: true
       windows-x86:
         imageName: 'vs2017-win2016'
         isWindows: true
         x86: true
+        isClassic: true
       linux:
         imageName: 'ubuntu-18.04'
         isLinux: true
+        isClassic: true
+        cmakeTarget: pipeline-components
+        
+      mac-xt:
+        imageName: 'macos-10.15'
+        isMac: true
+        isXT: true
+        cmakeTarget: surge-xt-distribution
+      windows-xt:
+        imageName: 'vs2017-win2016'
+        isWindows: true
+        x64: true
+        isXT: true
+        cmakeTarget: surge-xt-distribution
+      linux-xt:
+        imageName: 'ubuntu-18.04'
+        isLinux: true
+        isXT: true
+        cmakeTarget: surge-xt-distribution
 
   pool:
     vmImage: $(imageName)
@@ -196,10 +220,11 @@ jobs:
       set -e
       cmake -Bbuild -D AZURE_PIPELINE=1 -DBUILD_SURGE_JUCE_PLUGINS=TRUE
 
-      cmake --build build --config Release --target pipeline-components
+      cmake --build build --config Release --target $(cmakeTarget) --parallel 2
 
-    condition: variables.isLinux
+    condition: and(variables.isLinux, variables.isClassic)
     displayName: linux - Build Surge
+
 
   - bash: |
       set -e
@@ -207,14 +232,10 @@ jobs:
 
       cmake -Bbuild -GXcode -D AZURE_PIPELINE=1 -DBUILD_SURGE_JUCE_PLUGINS=TRUE -D"CMAKE_OSX_ARCHITECTURES=arm64;x86_64"
 
-      cmake --build build --config Release --target pipeline-components | xcpretty
+      cmake --build build --config Release --target $(cmakeTarget) | xcpretty
 
-      echo "Lipo Check"
-      lipo -archs build/surge_products/Surge.component/Contents/MacOS/Surge
-      lipo -archs build/surge_products/SurgeEffectsBank.vst3/Contents/MacOS/SurgeEffectsBank
-
-    condition: variables.isMac
     displayName: macOS - Build Surge
+
 
   - bash: |
       set -e
@@ -236,7 +257,7 @@ jobs:
   - bash: |
       set -e
 
-      cmake --build build --config Release --target pipeline-components
+      cmake --build build --config Release --target $(cmakeTarget)
     condition: variables.isWindows
     displayName: win - Build Surge
 
@@ -258,7 +279,7 @@ jobs:
       nuget install innosetup
       iscc installer_win/surge.iss
       mv installer_win/output/Surge-${SURGE_VERSION}-Setup.exe installer_win/output/Surge-${SURGE_VERSION}-no-extra-Setup.exe
-    condition: and(variables.isWindows, variables.x64)
+    condition: and(variables.isWindows, variables.x64, variables.isClassic)
     displayName: win64 - make no-extra installer
 
   - bash: |
@@ -266,7 +287,7 @@ jobs:
       nuget install innosetup
       iscc installer_win/surge-x86.iss
       mv installer_win/output/Surge-${SURGE_VERSION}-Setup-x86.exe installer_win/output/Surge-${SURGE_VERSION}-no-extra-Setup-x86.exe
-    condition: and(variables.isWindows, variables.x86)
+    condition: and(variables.isWindows, variables.x86, variables.isClassic)
     displayName: win32 - make no-extra installer
 
 # Then stage the extra assets
@@ -281,14 +302,14 @@ jobs:
       set -e
       nuget install innosetup
       iscc installer_win/surge.iss
-    condition: and(variables.isWindows, variables.x64)
+    condition: and(variables.isWindows, variables.x64, variables.isClassic)
     displayName: win64 - make full installer
 
   - bash: |
       set -e
       nuget install innosetup
       iscc installer_win/surge-x86.iss
-    condition: and(variables.isWindows, variables.x86)
+    condition: and(variables.isWindows, variables.x86, variables.isClassic)
     displayName: win32 - make full installer
 
 
@@ -299,14 +320,14 @@ jobs:
       ./make_installer.sh $SURGE_VERSION --dmg
       rm -f *.pkg
       popd
-    condition: variables.isMac
+    condition: and(variables.isMac, variables.isClassic)
     displayName: mac - make installer
 
   - task: PublishPipelineArtifact@0
     inputs:
       artifactName: 'INSTALLER_MAC_DMG'
       targetPath: 'installer_mac/installer'
-    condition: variables.isMac
+    condition: and(variables.isMac, variables.isClassic)
     displayName: mac - publish DMG
 
 
@@ -314,7 +335,7 @@ jobs:
     inputs:
       artifactName: 'INSTALLER_WIN_EXE'
       targetPath: 'installer_win/Output'
-    condition: and(variables.isWindows, variables.x64)
+    condition: and(variables.isWindows, variables.x64, variables.isClassic)
     displayName: win64 - publish installer
     
   - bash: |
@@ -337,21 +358,21 @@ jobs:
       mv ziptmp/*.zip zipfinal
 
       ls -l zipfinal
-    condition: and(variables.isWindows, variables.x64)
+    condition: and(variables.isWindows, variables.x64, variables.isClassic)
     displayName: win64 - make zip version
 
   - task: PublishPipelineArtifact@0
     inputs:
       artifactName: 'INSTALLER_WIN_ZIP'
       targetPath: 'zipfinal'
-    condition: and(variables.isWindows, variables.x64)
+    condition: and(variables.isWindows, variables.x64, variables.isClassic)
     displayName: win64 - publish windows zip
 
   - task: PublishPipelineArtifact@0
     inputs:
       artifactName: 'INSTALLER_WIN_X86_EXE'
       targetPath: 'installer_win/Output'
-    condition: and(variables.isWindows, variables.x86)
+    condition: and(variables.isWindows, variables.x86, variables.isClassic)
     displayName: win32 - publish installer
 
   - bash: |
@@ -374,14 +395,14 @@ jobs:
       mv ziptmp/*.zip zipfinal
 
       ls -l zipfinal
-    condition: and(variables.isWindows, variables.x86)
+    condition: and(variables.isWindows, variables.x86, variables.isClassic)
     displayName: win32 - make zip version
 
   - task: PublishPipelineArtifact@0
     inputs:
       artifactName: 'INSTALLER_WIN_X86_ZIP'
       targetPath: 'zipfinal'
-    condition: and(variables.isWindows, variables.x86)
+    condition: and(variables.isWindows, variables.x86, variables.isClassic)
     displayName: win32 - publish windows zip
 
   - bash: |
@@ -391,15 +412,38 @@ jobs:
       echo "sudo ./make_deb.sh $SURGE_VERSION"
       sudo ./make_deb.sh "$SURGE_VERSION"
       popd
-    condition: variables.isLinux
+    condition: and(variables.isLinux, variables.isClassic)
     displayName: linux - make deb installer
 
   - task: PublishPipelineArtifact@0
     inputs:
       artifactName: 'INSTALLER_LINUX_DEB'
       targetPath: 'installer_linux/product'
-    condition: variables.isLinux
+    condition: and(variables.isLinux, variables.isClassic)
     displayName: linux - publish deb installer
+
+  - task: PublishPipelineArtifact@0
+    inputs:
+      artifactName: 'INSTALLER_WIN_XT'
+      targetPath: 'build/surge-xt-zip'
+    condition: and(variables.isWindows, variables.isXT)
+    displayName: win - publish xt zip
+
+  - task: PublishPipelineArtifact@0
+    inputs:
+      artifactName: 'INSTALLER_MAC_XT'
+      targetPath: 'build/surge-xt-zip'
+    condition: and(variables.isMac, variables.isXT)
+    displayName: max - publish xt zip
+
+
+  - task: PublishPipelineArtifact@0
+    inputs:
+      artifactName: 'INSTALLER_LIN_XT'
+      targetPath: 'build/surge-xt-zip'
+    condition: and(variables.isLinux, variables.isXT)
+    displayName: linux - publish xt zip
+
 
   # Finally make the git info
   - bash: |
@@ -478,6 +522,21 @@ jobs:
   - task: DownloadPipelineArtifact@0
     inputs:
       artifactName: 'INSTALLER_LINUX_DEB'
+      targetPath: $(System.DefaultWorkingDirectory)
+
+  - task: DownloadPipelineArtifact@0
+    inputs:
+      artifactName: 'INSTALLER_WIN_XT'
+      targetPath: $(System.DefaultWorkingDirectory)
+
+  - task: DownloadPipelineArtifact@0
+    inputs:
+      artifactName: 'INSTALLER_LIN_XT'
+      targetPath: $(System.DefaultWorkingDirectory)
+
+  - task: DownloadPipelineArtifact@0
+    inputs:
+      artifactName: 'INSTALLER_MAC_XT'
       targetPath: $(System.DefaultWorkingDirectory)
 
   - task: DownloadPipelineArtifact@0
