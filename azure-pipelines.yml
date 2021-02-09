@@ -93,6 +93,7 @@ jobs:
       windows-x86:
         imageName: 'vs2017-win2016'
         isWindows: true
+        cmakeTarget: pipeline-components
         x86: true
         isClassic: true
       linux:
@@ -107,7 +108,7 @@ jobs:
         isXT: true
         cmakeTarget: surge-xt-distribution
       windows-xt:
-        imageName: 'vs2017-win2016'
+        imageName: 'windows-2019'
         isWindows: true
         x64: true
         isXT: true
