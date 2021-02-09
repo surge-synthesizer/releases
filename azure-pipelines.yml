@@ -3,6 +3,9 @@
 
 trigger: none
 
+variables:
+  DECODE_PERCENTS: false
+
 jobs:
 - job: MakeTarball
   steps:
@@ -235,6 +238,7 @@ jobs:
       cmake --build build --config Release --target $(cmakeTarget) | xcpretty
 
     displayName: macOS - Build Surge
+    condition: variables.isMac
 
 
   - bash: |
