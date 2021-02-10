@@ -222,7 +222,7 @@ jobs:
 
   - bash: |
       set -e
-      cmake -Bbuild -D AZURE_PIPELINE=1 -DBUILD_SURGE_JUCE_PLUGINS=TRUE
+      cmake -Bbuild -D AZURE_PIPELINE=1 -DBUILD_SURGE_JUCE_PLUGINS=TRUE -DCMAKE_INSTALL_PREFIX=/usr
 
       cmake --build build --config Release --target $(cmakeTarget) --parallel 2
 
