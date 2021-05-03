@@ -16,12 +16,12 @@ jobs:
       set -o xtrace
 
       if [ "$SURGE_BRANCH" == "" ]; then
-        export SURGE_LOCAL_BRANCH='main'
+        export SURGE_LOCAL_BRANCH='classic'
       else
         export SURGE_LOCAL_BRANCH="${SURGE_BRANCH/refs\/heads\/}"
       fi
 
-      if ! [[ $SURGE_LOCAL_BRANCH =~ ^(main|release/.+)$ ]]; then
+      if ! [[ $SURGE_LOCAL_BRANCH =~ ^(classic|release/.+)$ ]]; then
         exit 1
       fi
 
@@ -44,7 +44,7 @@ jobs:
       perl scripts/misc/skinTutorialsToMarkdown.pl 
 
 
-      if [ "$SURGE_VERSION" == "main" ]; then
+      if [ "$SURGE_VERSION" == "classic" ]; then
         export SURGE_VERSION="NIGHTLY-$(date +%Y-%m-%d)-$(git rev-parse --short HEAD)"
       fi
       echo "SURGE_VERSION=$SURGE_VERSION"
@@ -131,12 +131,12 @@ jobs:
       set -e
 
       if [ "$SURGE_BRANCH" == "" ]; then
-        export SURGE_LOCAL_BRANCH='main'
+        export SURGE_LOCAL_BRANCH='classic'
       else
         export SURGE_LOCAL_BRANCH="${SURGE_BRANCH/refs\/heads\/}"
       fi
 
-      if ! [[ $SURGE_LOCAL_BRANCH =~ ^(main|release/.+)$ ]]; then
+      if ! [[ $SURGE_LOCAL_BRANCH =~ ^(classic|release/.+)$ ]]; then
         exit 1
       fi
 
@@ -163,7 +163,7 @@ jobs:
       . ./scripts/misc/defensive-submodule.sh
       set -e
 
-      if [ "$SURGE_VERSION" == "main" ]; then
+      if [ "$SURGE_VERSION" == "classic" ]; then
         export SURGE_VERSION="NIGHTLY-$(date +%Y-%m-%d)-$(git rev-parse --short HEAD)"
       fi
       echo "SURGE_VERSION=$SURGE_VERSION"
@@ -584,7 +584,7 @@ jobs:
       tar zxvf ghr.tar.gz
 
       echo "SURGE BRANCH is $SURGE_BRANCH"
-      if [ "$SURGE_BRANCH" == "main" ]; then
+      if [ "$SURGE_BRANCH" == "classic" ]; then
         echo "Exporting to NIGHTLY"
         export SURGE_LOCAL_BRANCH="NIGHTLY"
         export PRE="-prerelease"
